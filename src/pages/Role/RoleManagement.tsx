@@ -54,7 +54,7 @@ const RoleManagement = () => {
       {/* Search */}
       <div className="table-card">
         <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap">
-          <div className="table-card__title form-app mb-0 d-flex align-items-center gap-2">
+          <div className="table-card__title form-app mb-0 d-flex flex-row align-items-center gap-2">
             <input
               className="form-control form-control-sm"
               style={{ width: 280 }}
@@ -79,8 +79,8 @@ const RoleManagement = () => {
 
       {/* Table */}
       <DataTable<Role>
-        title="Role list"
-        description={isFetching ? "Refreshing…" : "Quản lí quyền"}
+        title="Danh sách quyền"
+        description={isFetching ? "Đang tải…" : "Quản lí quyền"}
         columns={columns}
         rows={rows}
         loading={isLoading}

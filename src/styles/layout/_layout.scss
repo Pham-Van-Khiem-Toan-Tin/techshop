@@ -73,11 +73,6 @@
 .app-content {
   min-width: 0;
   padding-top: calc(var(--topbar-height) + 1rem); /* 1rem cho spacing đẹp */
-  .border-app--rounded {
-    border: 1px solid var(--app-border);
-    border-radius: 16px;
-  }
-  .bg-surface {
-    background-color: var(--app-surface);
-  }
+  
+
 }

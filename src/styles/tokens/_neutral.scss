@@ -19,7 +19,9 @@
   --app-text-muted: var(--neutral-500);
   --app-border: var(--neutral-200);
 
-  --app-radius: 12px;
+  --app-radius: 10px;
+  --app-radius--sm: 6px;
+  --app-radius--md: 8px;
   --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.06);
   --shadow-md: 0 8px 24px rgba(17, 24, 39, 0.08);
 

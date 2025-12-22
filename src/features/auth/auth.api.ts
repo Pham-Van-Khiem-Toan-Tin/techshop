@@ -4,6 +4,7 @@ export type User = {
   id: string;
   email: string;
   name: string;
+  permission: string[];
 };
 
 export async function getMe() {

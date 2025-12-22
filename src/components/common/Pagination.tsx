@@ -56,7 +56,7 @@ export default function Pagination({
       <div className="pagination-app__left">
         {showRowsPerPage && (
           <>
-            <span className="pg__label">Rows per page</span>
+            <span className="pg__label">Số bản ghi mỗi trang</span>
             <select
               className="pg__select"
               value={rowsPerPage}
@@ -79,7 +79,7 @@ export default function Pagination({
             disabled={current <= 1}
             onClick={() => onChange(current - 1)}
           >
-            ‹ <span className="ms-1">Previous</span>
+            ‹ <span className="ms-1">Trước</span>
           </button>
 
           {pages.map((p, idx) =>
@@ -103,7 +103,7 @@ export default function Pagination({
             disabled={current >= totalPages}
             onClick={() => onChange(current + 1)}
           >
-            <span className="me-1">Next</span> ›
+            <span className="me-1">Sau</span> ›
           </button>
         </div>
       </div>

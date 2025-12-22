@@ -6,7 +6,7 @@
   --field-border: var(--app-border);
   --field-muted: var(--app-text-muted);
 
-  --field-radius: var(--radius-md);
+  --field-radius: var(--app-radius--sm);
   --field-shadow: none;
 }
 
@@ -36,10 +36,13 @@
 .form-app .form-control,
 .form-app .form-select,
 .form-app .form-check-input {
-  border-radius: var(--field-radius);
+  border-radius: var(--field-radius) !important;
   border: 1px solid var(--field-border);
 }
-
+.form-app .form-message-error {
+  color: var(--danger);
+  font-size: 12px;
+}
 .form-app .form-control,
 .form-app .form-select {
   height: var(--control-h);
@@ -203,3 +206,69 @@
   color: var(--field-muted);
   text-align: right;
 }
+
+
+
+.form-app textarea.form-control {
+  height: auto;                 /* quan trọng: không dùng height control-h */
+  min-height: 96px;             /* giống ảnh (basic) */
+  padding: 12px;                /* textarea padding đều */
+  line-height: 1.4;
+  resize: vertical;             /* chỉ cho kéo dọc (gọn) */
+}
+
+/* Size variants */
+.form-app textarea.form-control.form-control-sm {
+  min-height: 84px;
+  padding: 10px;
+  font-size: 13px;
+  border-radius: var(--radius-sm);
+}
+
+.form-app textarea.form-control.form-control-lg {
+  min-height: 120px;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+}
+
+/* Placeholder: nhỏ + muted giống ảnh */
+.form-app textarea.form-control::placeholder {
+  color: rgba(107, 114, 128, 0.85);
+  font-size: 0.75rem; /* 12px nếu base 16; bạn đang dùng body 14 thì vẫn ổn */
+}
+
+/* Focus: ring giống input (giữ consistency) */
+.form-app textarea.form-control:focus {
+  border-color: var(--neutral-300);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+/* Disabled/readonly */
+.form-app textarea.form-control:disabled,
+.form-app textarea.form-control[readonly] {
+  background: var(--neutral-100);
+  opacity: 0.8;
+  resize: none;
+}
+
+/* Invalid: giống ảnh viền đỏ + ring đỏ */
+.form-app textarea.form-control.is-invalid,
+.form-app .was-validated textarea.form-control:invalid {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.16);
+}
+
+/* Optional: nếu bạn muốn "Invalid" nhìn nổi hơn (giống screenshot có 2 lớp) */
+.form-app textarea.form-control.is-invalid:focus,
+.form-app .was-validated textarea.form-control:invalid:focus {
+  box-shadow:
+    0 0 0 2px rgba(239, 68, 68, 0.20),
+    0 0 0 6px rgba(239, 68, 68, 0.10);
+}
+
+/* Nếu textarea nằm trong input-group (ít dùng nhưng cho đủ) */
+.form-app .input-group textarea.form-control {
+  height: auto;
+  min-height: 96px;
+}
+

@@ -7,16 +7,15 @@ const Login = () => {
         <div className="login-brand">
           <div className="login-logo" />
           <div>
-            <div className="login-title">Admin Dashboard</div>
-            <div className="login-subtitle">Sign in to continue</div>
+            <div className="login-title">Bảng điều khiên</div>
+            <div className="login-subtitle">Đăng nhập để tiếp tục.</div>
           </div>
         </div>
 
         {/* Content */}
         <div className="login-content">
           <p className="login-desc">
-            This dashboard is restricted. Please sign in with your organization
-            account to continue.
+            Trang quản trị này bị hạn chế. Vui lòng đăng nhập bằng tài khoản tổ chức của bạn để tiếp tục.
           </p>
 
           <a href="http://localhost:8082/auth/oauth2/authorization/admin-idp" className="btn-app btn-app--default w-100 login-btn">

@@ -1,0 +1,31 @@
+export const toSection = (fct: FunctionEntity[] | undefined | null): Section[] => {
+  if (!fct) return [];
+
+  return fct.map((f) => ({
+    key: f.id,
+    eventKey: f.id,
+    id: f.id,
+    title: f.name,
+    description: f.description,
+    order: f.sortOrder,
+    options: (f.subFunctions ?? []).map((sf) => ({
+      id: sf.id,
+      label: sf.name,
+      description: sf.description ?? "",
+      order: sf.sortOrder,
+    })),
+  }));
+};
+export interface SubFunction {
+  id: string;
+  name: string;
+  description: string;
+  sortOrder: number;
+}
+export interface FunctionEntity {
+  id: string;
+  name: string;
+  description: string;
+  sortOrder: number;
+  subFunctions: SubFunction[];
+}
