@@ -1,0 +1,18 @@
+.accordion {
+  .accordion-header {
+    button {
+        box-shadow: none;
+        background-color: var(--neutral-300);
+    }
+    .accordion-button::after {
+        background-image: url("/dropdown.png");
+    }
+    .total-select {
+        display: inline-block;
+        position: absolute;
+        right: 10%;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+  }
+}
