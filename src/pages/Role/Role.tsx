@@ -32,8 +32,8 @@ const Role = () => {
 
   const columns = useMemo<Column<Role>[]>(() =>
     [
-      { key: "id", title: "ID", muted: true, render: (r) => r.id },
-      { key: "name", title: "Tên", strong: true, render: (r) => r.name },
+      { key: "id", title: "ID", strong: true, render: (r) => r.id },
+      { key: "name", title: "Tên", muted: true, render: (r) => r.name },
       { key: "description", title: "Mô tả", muted: true, render: (r) => r.description },
       { key: "quantityPermission", title: "Số lượng quyền hạn", muted: true, render: (r) => r.quantityPermission },
     ]
@@ -84,7 +84,7 @@ const Role = () => {
         columns={columns}
         rows={rows}
         loading={isLoading}
-        emptyText="No roles found."
+        emptyText="Không tìm thấy bản ghi nào."
         selection={{
           enabled: true,
           getRowId: (r) => r.id,
