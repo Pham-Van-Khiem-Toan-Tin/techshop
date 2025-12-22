@@ -1,4 +1,4 @@
-import { Accordion } from "react-bootstrap"
+import { Accordion, Row } from "react-bootstrap"
 import "../../styles/components/_accordion.scss"
 const AccordionSelect = () => {
   return (
@@ -18,13 +18,16 @@ const AccordionSelect = () => {
               </label>
               <span className="f-bold text-black f-body d-inline-block">Quản lí người dùng</span>
             </div>
-            {/* <div>
-              <span>0/4</span>
 
-            </div> */}
+            <span className="total-select text-dark">0/4</span>
+
+
           </div>
         </Accordion.Header>
         <Accordion.Body>
+          <Row>
+            
+          </Row>
           Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
           eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
           minim veniam, quis nostrud exercitation ullamco laboris nisi ut
