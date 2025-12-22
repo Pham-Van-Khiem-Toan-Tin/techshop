@@ -20,7 +20,7 @@ import { store } from "./store/store"
 import { createBrowserRouter, Navigate } from "react-router"
 import { RouterProvider } from "react-router/dom"
 import Dashboard from "./pages/Dashboard/Dashboard";
-import Role from "./pages/Role/Role";
+import RoleManagement from "./pages/Role/RoleManagement";
 import Product from "./pages/Product/Product";
 import Order from "./pages/Order/Order";
 import Category from "./pages/Category/Category";
@@ -29,6 +29,7 @@ import AppBootstrap from "./AppBootstrap";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import PublicRoute from "./auth/PublicRoute";
 import RoleCreate from "./pages/Role/RoleCreate";
+import FunctionManagement from "./pages/Function/FunctionManagement";
 
 const router = createBrowserRouter([
   {
@@ -54,8 +55,9 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <Navigate to="/dashboard" replace /> },
           { path: "dashboard", element: <Dashboard /> },
-          { path: "roles", element: <Role /> },
+          { path: "roles", element: <RoleManagement /> },
           { path: "roles/create", element: <RoleCreate /> },
+          { path: "functions", element: <FunctionManagement />},
           { path: "products", element: <Product /> },
           { path: "orders", element: <Order /> },
           { path: "categories", element: <Category /> }

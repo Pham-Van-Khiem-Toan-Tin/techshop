@@ -14,7 +14,7 @@ export type Column<T> = {
 
 export type TableAction<T> = {
   key: string;
-  label: string;
+  label: string | Element;
   tone?: "default" | "danger";
   visible?: (row: T) => boolean;
   disabled?: (row: T) => boolean;

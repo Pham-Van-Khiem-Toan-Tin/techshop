@@ -12,6 +12,9 @@
 
 .form-app {
   /* wrapper để bạn scope style nếu muốn */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* Label */
@@ -48,6 +51,7 @@
 
   &::placeholder {
     color: rgba(107, 114, 128, 0.85);
+    font-size: 0.75rem;
   }
 
   &:focus {

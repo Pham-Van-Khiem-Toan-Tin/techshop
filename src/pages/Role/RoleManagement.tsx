@@ -7,7 +7,7 @@ import DataTable from '../../components/common/DataTable';
 import { RiDeleteBin6Line, RiEditLine, RiEyeLine } from 'react-icons/ri';
 import { useDebounce } from '../../hooks/useDebounce';
 import { Link } from 'react-router';
-const Role = () => {
+const RoleManagement = () => {
   const [keyword, setKeyword] = useState("");
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
@@ -149,4 +149,4 @@ const Role = () => {
   )
 }
 
-export default Role
+export default RoleManagement

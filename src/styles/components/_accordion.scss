@@ -1,0 +1,11 @@
+.accordion {
+  .accordion-header {
+    button {
+        box-shadow: none;
+        background-color: var(--neutral-500);
+    }
+    .accordion-button::after {
+        background-image: url("/dropdown.png");
+    }
+  }
+}
