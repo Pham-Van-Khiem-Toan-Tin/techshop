@@ -82,7 +82,7 @@ const RoleCreate = () => {
               {errors.description && <span className='form-message-error'>{errors.description?.message}</span>}
             </div>
           </form>
-          <div className='border-app--rounded bg-neutral-100 p-2 m-2'>
+          <div className='border-app--rounded  bg-neutral-100 p-2 m-2'>
             <div className='f-medium'>Tổng kết</div>
             <div className='d-flex align-items-center justify-content-between'>
               <span className='f-body-2xs'>Các quyền được chọn:</span>

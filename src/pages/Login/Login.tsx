@@ -1,3 +1,4 @@
+import Logo from "../../assets/images/Logo.png"
 import "./login.scss"
 const Login = () => {
   return (
@@ -5,7 +6,7 @@ const Login = () => {
       <div className="login-card">
         {/* Brand */}
         <div className="login-brand">
-          <div className="login-logo" />
+          <img src={Logo} className="login-logo" />
           <div>
             <div className="login-title">Bảng điều khiên</div>
             <div className="login-subtitle">Đăng nhập để tiếp tục.</div>
@@ -19,7 +20,7 @@ const Login = () => {
           </p>
 
           <a href="http://localhost:8082/auth/oauth2/authorization/admin-idp" className="btn-app btn-app--default w-100 login-btn">
-            Sign in with SSO
+            Đăng nhập với SSO
           </a>
         </div>
 

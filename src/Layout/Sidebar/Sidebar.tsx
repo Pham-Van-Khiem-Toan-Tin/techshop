@@ -1,4 +1,5 @@
 import { NavLink } from "react-router";
+import Logo from "../../assets/images/Logo.png"
 
 const Sidebar = () => {
     const linkClass = ({isActive}: {isActive: boolean}) => 
@@ -6,7 +7,7 @@ const Sidebar = () => {
   return (
     <div className="p-3 sidebar">
       <div className="d-flex align-items-center gap-2 mb-5">
-        <div style={{ width: 40, height: 40, borderRadius: 14, background: "var(--neutral-900)" }} />
+        <img src={Logo} alt="logo" className="logo" style={{ width: 40, height: 40, borderRadius: 14}} />
         <div>
           <div className="fw-semibold">Ecommerce</div>
           <div className="text-muted small">Admin</div>

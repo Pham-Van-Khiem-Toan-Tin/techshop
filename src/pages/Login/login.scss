@@ -33,11 +33,12 @@
   width: 44px;
   height: 44px;
   border-radius: 14px;
-  background: linear-gradient(
-    135deg,
-    var(--neutral-900),
-    var(--neutral-600)
-  );
+  // background: linear-gradient(
+  //   135deg,
+  //   var(--neutral-900),
+  //   var(--neutral-600)
+  // );
+  background-image: url("Logo.png");
 }
 
 .login-title {
