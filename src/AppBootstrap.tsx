@@ -23,8 +23,6 @@ export default function AppBootstrap({ children }: { children: React.ReactNode }
       />
     )
   }
-  console.log(status);
-
   if (status === "unauthenticated") {
     if (location.pathname === "/login") return <>{children}</>;
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;

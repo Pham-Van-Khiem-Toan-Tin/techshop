@@ -52,23 +52,23 @@ const RoleCreate = () => {
         <Col lg={4}>
           <form id="role-form" onSubmit={handleSubmit(onSubmit)} className='form-app p-2'>
             <div>
-              <label htmlFor="ID">ID: <span className="text-danger">*</span></label>
+              <label htmlFor="ID">ID vai trò: <span className="text-danger">*</span></label>
               <input {...register("Id", {
                 required: {
                   value: true,
                   message: "Id không được để trống."
                 }
-              })} type="text" id='ID' className='form-control form-control-sm' placeholder='ROLE_EXAMPLE...' />
+              })} type="text" id='ID' className='form-control form-control-sm' placeholder='Ví dụ: ROLE_EXAMPLE' />
               {errors.Id && <span className='form-message-error'>{errors.Id?.message}</span>}
             </div>
             <div>
-              <label htmlFor="name">Tên: <span className="text-danger">*</span></label>
+              <label htmlFor="name">Tên vai trò: <span className="text-danger">*</span></label>
               <input {...register("name", {
                 required: {
                   value: true,
                   message: "Tên không được để trống."
                 }
-              })} type="text" id='name' className='form-control form-control-sm' placeholder='Name...' />
+              })} type="text" id='name' className='form-control form-control-sm' placeholder='Ví dụ: Khách hàng...' />
               {errors.name && <span className='form-message-error'>{errors.name?.message}</span>}
             </div>
             <div>
@@ -78,15 +78,15 @@ const RoleCreate = () => {
                   value: true,
                   message: "Mô tả không được để trống."
                 }
-              })} id='description' className='form-control' placeholder='Nhập thông tin mô tả...' />
+              })} id='description' className='form-control' placeholder='Mô tả trách nhiệm...' />
               {errors.description && <span className='form-message-error'>{errors.description?.message}</span>}
             </div>
           </form>
           <div className='border-app--rounded  bg-neutral-100 p-2 m-2'>
-            <div className='f-medium'>Tổng kết</div>
+            <div className='f-medium'>Tóm tắt</div>
             <div className='d-flex align-items-center justify-content-between'>
-              <span className='f-body-2xs'>Các quyền được chọn:</span>
-              <span className='d-inline-block bg-white py-1 px-2 app--radius f-body-xs' >0</span>
+              <span className='f-body-2xs'>Chức năng đã chọn:</span>
+              <span className='d-inline-block bg-white py-1 px-2 app-radius__sm f-body-xs' >0</span>
             </div>
           </div>
         </Col>

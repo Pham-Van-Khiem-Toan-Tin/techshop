@@ -19,10 +19,13 @@ const Sidebar = () => {
           Tổng quan
         </NavLink>
         <NavLink to="/roles" className={linkClass}>
-          Quản lí phân quyền
+          Quản lí vai trò
         </NavLink>
         <NavLink to="/functions" className={linkClass}>
           Quản lí chức năng
+        </NavLink>
+        <NavLink to="/subfunctions" className={linkClass}>
+          Quản lí quyền hạn
         </NavLink>
         <NavLink to="/categories" className={linkClass}>
           Quản lí danh mục
