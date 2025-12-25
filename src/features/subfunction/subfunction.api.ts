@@ -5,10 +5,14 @@ import type { SubFunction } from "../../types/function.type";
 import type { ApiResponse } from "../../types/api.type";
 import type { SubFunctionForm } from "../../types/subFunction.type";
 type UpdateArg = { id: string; body: SubFunctionForm };
+type SubFunctionSearch = {
+  keyword: string;
+  ids: string[];
+}
 export const subFunctionApi = createApi({
   reducerPath: "subfunctionApi",
   baseQuery,
-  tagTypes: ["SubFunctions", "SubFunction"],
+  tagTypes: ["SubFunctions", "SubFunction", "SubFunctionOptions"],
   endpoints: (builder) => ({
     getSubFunctions: builder.query<
       Page<SubFunction>,
@@ -36,6 +40,14 @@ export const subFunctionApi = createApi({
           : [{ type: "SubFunctions" as const, id: "LIST" }],
       keepUnusedDataFor: 30,
     }),
+    getSubFunctionOptions: builder.mutation<SubFunction[], SubFunctionSearch>({
+      query: (body) => ({
+        url: "/auth/subfunctions/list/options",
+        method: "POST",
+        body
+      }),
+      invalidatesTags: [{type: "SubFunctionOptions", id: "LIST"}],
+    }),
     getSubFunctionById: builder.query<SubFunctionForm, string>({
       query: (id) => ({
         url: `/auth/subfunctions/${id}`,
@@ -52,7 +64,7 @@ export const subFunctionApi = createApi({
       invalidatesTags: [{ type: "SubFunctions", id: "LIST" }],
     }),
     updateSubFunction: builder.mutation<
-      SubFunction,
+      ApiResponse,
       UpdateArg
     >({
       query: ({ id, body }) => ({
@@ -89,4 +101,5 @@ export const {
   useUpdateSubFunctionMutation,
   useDeleteSubFunctionMutation,
   useGetSubFunctionByIdQuery,
+  useGetSubFunctionOptionsMutation
 } = subFunctionApi;

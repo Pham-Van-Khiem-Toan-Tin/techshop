@@ -1,7 +1,7 @@
 import { Col, Row } from "react-bootstrap"
 import { Controller, useForm, type SubmitHandler } from "react-hook-form"
 import { RiSave3Line } from "react-icons/ri"
-import { Link, useNavigate } from "react-router"
+import { useNavigate } from "react-router"
 import { useGetFunctionOptionsQuery } from "../../features/functions/function.api"
 import { toast } from "react-toastify"
 import type { FunctionOption } from "../../types/function.type"
@@ -81,6 +81,11 @@ const SubFunctionCreate = () => {
                                     }}
                                     onBlur={field.onBlur}
                                     name={field.name}
+                                    styles={{
+                                        control: (base) => ({ ...base, minHeight: 34 }),
+                                        valueContainer: (base) => ({ ...base, paddingTop: 0, paddingBottom: 0 }),
+                                        indicatorsContainer: (base) => ({ ...base, height: 34 }),
+                                    }}
                                 />
                             )}
                         />

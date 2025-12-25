@@ -105,7 +105,7 @@ const SubFunctionEdit = () => {
             // thường edit không cho sửa id -> vẫn gửi id để backend biết update record nào
             const res = await updateSubFunction({ id: id, body: data }).unwrap();
             setIsRedirecting(true);
-            toast.success(res?.message ?? "Cập nhật thành công");
+            toast.success(res.message ?? "Cập nhật thành công");
 
             setTimeout(() => {
                 navigate("/subfunctions", { replace: true });

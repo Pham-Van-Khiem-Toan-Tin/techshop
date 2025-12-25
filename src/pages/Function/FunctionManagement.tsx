@@ -14,8 +14,10 @@ import { RiDeleteBin6Line, RiEditLine, RiEyeLine } from 'react-icons/ri';
 import { FilterIndicator } from "../../components/common/FilterIndicator ";
 import { SortIndicator } from "../../components/common/SortIndicator ";
 import type { Page } from "../../types/page.type";
-import { Link } from 'react-router';
-import { useGetFunctionsQuery } from '../../features/functions/function.api';
+import { Link, useNavigate } from 'react-router';
+import { useDeleteFunctionMutation, useGetFunctionsQuery } from '../../features/functions/function.api';
+import { toast } from "react-toastify";
+import { Modal } from "react-bootstrap";
 const SIZE_OPTIONS = [10, 25, 50, 100] as const;
 const DEFAULT_SIZE = 10;
 
@@ -123,6 +125,37 @@ const FunctionManagement = () => {
     keywordInput !== query.q ||
     sortDraft !== query.sort ||
     JSON.stringify(fieldDraft) !== JSON.stringify(query.field);
+  const navigate = useNavigate();
+
+
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<FunctionData | null>(null);
+
+  const openDelete = (row: FunctionData) => {
+    setDeleteTarget(row);
+    setIsDeleteOpen(true);
+  };
+  const closeDelete = () => {
+    setIsDeleteOpen(false);
+    setDeleteTarget(null);
+  };
+
+  const [deleteFunction, { isLoading: isDeleting }] =
+    useDeleteFunctionMutation();
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget?.id) return;
+
+    try {
+      const res = await deleteFunction(deleteTarget.id).unwrap();
+      toast.success(res?.message ?? "Xoá thành công");
+      // dọn selection nếu đang chọn
+      setSelectedIds((prev) => prev.filter((x) => x !== deleteTarget.id));
+      closeDelete();
+    } catch (err: any) {
+      toast.error(err?.data?.message ?? "Có lỗi xảy ra khi xoá");
+    }
+  };
   return (
     <div className="container-fluid py-3 d-grid gap-3">
       {/* Search */}
@@ -213,16 +246,14 @@ const FunctionManagement = () => {
           width: 320,
           title: "Thao tác",
           items: [
-            { key: "view", label: <RiEyeLine />, onClick: (r) => console.log("view", r.id) },
-            { key: "edit", label: <RiEditLine />, onClick: (r) => console.log("edit", r.id) },
+            { key: "view", label: <RiEyeLine />, onClick: (r) => navigate(`view/${r.id}`) },
+            { key: "edit", label: <RiEditLine />, onClick: (r) => navigate(`edit/${r.id}`) },
             {
               key: "delete",
               label: <RiDeleteBin6Line />,
               tone: "danger",
               onClick: (r) => {
-                if (window.confirm(`Delete role "${r.name}"?`)) {
-                  console.log("delete", r.id);
-                }
+               openDelete(r) 
               },
             },
           ],
@@ -261,6 +292,61 @@ const FunctionManagement = () => {
           </div>
         </div>
       )}
+      {/*Modal*/}
+      <Modal
+        show={isDeleteOpen}
+        onHide={closeDelete}
+        centered
+        dialogClassName="modal-app"
+        backdropClassName="modal-app-backdrop"
+      >
+        <Modal.Header>
+          <Modal.Title>
+            <span className="fw-bold fs-5">Xác nhận xoá</span>
+          </Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          <div className="mb-2">Bạn có chắc chắn muốn xoá quyền:</div>
+
+          <div
+            className="p-3 rounded"
+            style={{
+              background: "var(--neutral-50)",
+              border: "1px solid var(--app-border)",
+            }}
+          >
+            <div className="fw-semibold">{deleteTarget?.name}</div>
+            <div className="text-muted" style={{ color: "var(--app-text-muted)" }}>
+              ID: {deleteTarget?.id}
+            </div>
+          </div>
+
+          <div className="mt-3" style={{ color: "var(--app-text-muted)" }}>
+            Hành động này không thể hoàn tác.
+          </div>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <button
+            type="button"
+            className="btn-app btn-app--sm btn-app--ghost p-3"
+            onClick={closeDelete}
+            disabled={isDeleting}
+          >
+            Huỷ
+          </button>
+          <button
+            type="button"
+            className="btn-app btn-app--sm btn-app--danger"
+            onClick={handleConfirmDelete}
+            disabled={isDeleting}
+          >
+            <RiDeleteBin6Line />
+            {isDeleting ? "Đang xoá..." : "Xoá"}
+          </button>
+        </Modal.Footer>
+      </Modal>
     </div>
   )
 }

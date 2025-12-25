@@ -35,6 +35,9 @@ import SubFunctionCreate from "./pages/SubFunction/SubFunctionCreate";
 import { Bounce, ToastContainer } from "react-toastify";
 import SubFunctionEdit from "./pages/SubFunction/SubFunctionEdit";
 import SubFunctionDetail from "./pages/SubFunction/SubFunctionDetail ";
+import FunctionCreate from "./pages/Function/FunctionCreate";
+import FunctionEdit from "./pages/Function/FunctionEdit";
+import FunctionDetail from "./pages/Function/FunctionDetail";
 
 const router = createBrowserRouter([
   {
@@ -63,6 +66,9 @@ const router = createBrowserRouter([
           { path: "roles", element: <RoleManagement /> },
           { path: "roles/create", element: <RoleCreate /> },
           { path: "functions", element: <FunctionManagement /> },
+          { path: "functions/create", element: <FunctionCreate /> },
+          { path: "functions/edit/:id", element: <FunctionEdit /> },
+          { path: "functions/view/:id", element: <FunctionDetail /> },
           { path: "subfunctions", element: <SubFunctionManagement /> },
           { path: "subfunctions/edit/:id", element: <SubFunctionEdit /> },
           { path: "subfunctions/detail/:id", element: <SubFunctionDetail /> },
