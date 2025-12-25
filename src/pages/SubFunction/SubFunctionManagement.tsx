@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import Select from "react-select";
 import {
     useQueryStates,
@@ -7,15 +7,17 @@ import {
     parseAsString,
     parseAsNativeArrayOf,
 } from "nuqs";
-import { useGetSubFunctionsQuery } from "../../features/subfunction/subfunction.api";
+import { useDeleteSubFunctionMutation, useGetSubFunctionsQuery } from "../../features/subfunction/subfunction.api";
 import type { SubFunction } from "../../types/function.type";
 import type { Column } from "../../types/table.type";
 import Pagination from "../../components/common/Pagination";
 import DataTable from "../../components/common/DataTable";
-import { RiDeleteBin6Line, RiEditLine, RiEyeLine } from "react-icons/ri";
+import { RiCloseLine, RiDeleteBin6Line, RiEditLine, RiEyeLine } from "react-icons/ri";
 import { FilterIndicator } from "../../components/common/FilterIndicator ";
 import { SortIndicator } from "../../components/common/SortIndicator ";
 import type { Page } from "../../types/page.type";
+import { Modal } from "react-bootstrap";
+import { toast } from "react-toastify";
 
 const SIZE_OPTIONS = [10, 25, 50, 100] as const;
 const DEFAULT_SIZE = 10;
@@ -147,7 +149,24 @@ export default function SubFunctionManagement() {
         keywordInput !== query.q ||
         sortDraft !== query.sort ||
         JSON.stringify(fieldDraft) !== JSON.stringify(query.field);
+    const navigate = useNavigate();
+    const [deleteTarget, setDeleteTarget] = useState<SubFunction | null>(null);
+    const isDeleteOpen = !!deleteTarget;
 
+    const closeDelete = () => setDeleteTarget(null);
+    const [deleteSubFunction, { isLoading: isDeleting }] = useDeleteSubFunctionMutation()
+    const handleConfirmDelete = async () => {
+        if (!deleteTarget) return;
+
+        try {
+            await deleteSubFunction(deleteTarget.id).unwrap();
+
+            toast.success(`Đã xoá "${deleteTarget.id}"`);
+            closeDelete();
+        } catch (e: any) {
+            toast.error(e?.data?.message ?? "Có lỗi xảy ra");
+        }
+    };
     return (
         <div className="container-fluid py-3 d-grid gap-3">
             {/* Search + Filters */}
@@ -235,15 +254,15 @@ export default function SubFunctionManagement() {
                 }}
                 actions={{
                     width: 320,
+                    title: "Thao tác",
                     items: [
-                        { key: "view", label: <RiEyeLine />, onClick: (r) => console.log("view", r.id) },
-                        { key: "edit", label: <RiEditLine />, onClick: (r) => console.log("edit", r.id) },
+                        { key: "view", label: <RiEyeLine />, onClick: (r) => navigate(`/subfunctions/detail/${r.id}`) },
+                        { key: "edit", label: <RiEditLine />, onClick: (r) => navigate(`/subfunctions/edit/${r.id}`) },
                         {
                             key: "delete",
                             label: <RiDeleteBin6Line />,
                             tone: "danger",
-                            onClick: (r) =>
-                                window.confirm(`Delete role "${r.name}"?`) && console.log("delete", r.id),
+                            onClick: (r) => setDeleteTarget(r)
                         },
                     ],
                 }}
@@ -279,6 +298,49 @@ export default function SubFunctionManagement() {
                     </div>
                 </div>
             )}
+            {/* ---- Delete Modal */}
+            <Modal
+                show={isDeleteOpen}
+                onHide={closeDelete}
+                centered
+                dialogClassName="modal-app"
+                backdropClassName="modal-app-backdrop"
+            >
+                <Modal.Header>
+                    <Modal.Title>
+                        <span className="fw-bold fs-5">Xác nhận xoá</span>
+                    </Modal.Title>
+                </Modal.Header>
+
+                <Modal.Body>
+                    <div className="mb-2">
+                        Bạn có chắc chắn muốn xoá quyền:
+                    </div>
+
+                    <div className="p-3 rounded" style={{ background: "var(--neutral-50)", border: "1px solid var(--app-border)" }}>
+                        <div className="fw-semibold">{deleteTarget?.name}</div>
+                        <div className="text-muted" style={{ color: "var(--app-text-muted)" }}>
+                            ID: {deleteTarget?.id}
+                        </div>
+                    </div>
+
+                    <div className="mt-3" style={{ color: "var(--app-text-muted)" }}>
+                        Hành động này không thể hoàn tác.
+                    </div>
+                </Modal.Body>
+
+                <Modal.Footer>
+                    <button type="button" className="btn-app btn-app--sm btn-app--ghost p-3" onClick={closeDelete}>
+                        Huỷ
+                    </button>
+                    <button type="button" className="btn-app btn-app--sm btn-app--danger" onClick={handleConfirmDelete}>
+                        <RiDeleteBin6Line />
+                        Xoá
+                    </button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* ...*/}
         </div>
     );
 }

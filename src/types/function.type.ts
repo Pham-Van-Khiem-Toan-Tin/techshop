@@ -29,7 +29,10 @@ export interface FunctionEntity {
   sortOrder: number;
   subFunctions: SubFunction[];
 }
-
+export interface FunctionOption {
+  id: string,
+  name: string
+}
 export interface FunctionData {
   id: string;
   name: string;

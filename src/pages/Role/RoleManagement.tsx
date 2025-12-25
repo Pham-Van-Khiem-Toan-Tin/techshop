@@ -214,6 +214,7 @@ const RoleManagement = () => {
         }}
         actions={{
           width: 320,
+          title: "Thao tác",
           items: [
             { key: "view", label: <RiEyeLine />, onClick: (r) => console.log("view", r.id) },
             { key: "edit", label: <RiEditLine />, onClick: (r) => console.log("edit", r.id) },

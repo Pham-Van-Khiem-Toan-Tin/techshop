@@ -1,12 +1,12 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQuery } from "../../lib/baseQuery";
 
-import type { FunctionData, FunctionEntity } from "../../types/function.type";
+import type { FunctionData, FunctionEntity, FunctionOption } from "../../types/function.type";
 import type { Page } from "../../types/page.type";
 export const functionApi = createApi({
   reducerPath: "functionApi",
   baseQuery,
-  tagTypes: ["All_Function", "Function"],
+  tagTypes: ["All_Function", "Function", "Function_Option"],
   endpoints: (builder) => ({
     getAllFunctions: builder.query<
       FunctionEntity[],
@@ -46,10 +46,29 @@ export const functionApi = createApi({
             ]
           : [{ type: "Function" as const, id: "LIST" }],
           keepUnusedDataFor: 30
+    }),
+    getFunctionOptions: builder.query<
+    FunctionOption[],
+    null
+    >({
+      query: () => ({
+        url: "/auth/functions/options"
+      }),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map((p) => ({
+                type: "Function_Option" as const,
+                id: p.id,
+              })),
+              { type: "Function_Option" as const, id: "LIST" },
+            ]
+          : [{ type: "Function_Option" as const, id: "LIST" }],
+        keepUnusedDataFor: 30,
     })
   }),
   refetchOnFocus: true,
   refetchOnReconnect: true,
 });
 
-export const { useGetAllFunctionsQuery, useGetFunctionsQuery } = functionApi;
+export const { useGetAllFunctionsQuery, useGetFunctionsQuery, useGetFunctionOptionsQuery } = functionApi;

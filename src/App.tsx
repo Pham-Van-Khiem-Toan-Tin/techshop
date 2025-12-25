@@ -14,7 +14,7 @@ export default function App() {
           <Topbar />
         </header>
 
-        <main className="app-content container-fluid">
+        <main className="app-content">
           <Outlet />
         </main>
       </div>
