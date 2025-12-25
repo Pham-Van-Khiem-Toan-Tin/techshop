@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-
+import { NuqsAdapter } from 'nuqs/adapters/react'
 // Inter
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
@@ -30,6 +30,7 @@ import ProtectedRoute from "./auth/ProtectedRoute";
 import PublicRoute from "./auth/PublicRoute";
 import RoleCreate from "./pages/Role/RoleCreate";
 import FunctionManagement from "./pages/Function/FunctionManagement";
+import SubFunctionManagement from "./pages/SubFunction/SubFunctionManagement";
 
 const router = createBrowserRouter([
   {
@@ -58,6 +59,7 @@ const router = createBrowserRouter([
           { path: "roles", element: <RoleManagement /> },
           { path: "roles/create", element: <RoleCreate /> },
           { path: "functions", element: <FunctionManagement />},
+          { path: "subfunctions", element: <SubFunctionManagement /> },
           { path: "products", element: <Product /> },
           { path: "orders", element: <Order /> },
           { path: "categories", element: <Category /> }
@@ -72,7 +74,9 @@ const router = createBrowserRouter([
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Provider store={store}>
-      <RouterProvider router={router} />
+      <NuqsAdapter>
+        <RouterProvider router={router} />
+      </NuqsAdapter>
     </Provider>
   </React.StrictMode>
 );

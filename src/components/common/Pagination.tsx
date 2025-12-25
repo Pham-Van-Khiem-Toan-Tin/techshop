@@ -1,10 +1,10 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 
 type PaginationProps = {
   page: number;           // 1-based
   totalPages: number;
   onChange: (page: number) => void;
-
+  totalElement?: number,
   variant?: "basic" | "simple";
   showRowsPerPage?: boolean;
   rowsPerPage?: number;
@@ -41,13 +41,14 @@ function getPages(page: number, total: number, variant: "basic" | "simple") {
 export default function Pagination({
   page,
   totalPages,
+  totalElement = 0,
   onChange,
   variant = "basic",
   showRowsPerPage = false,
   rowsPerPage = 25,
   rowsPerPageOptions = [10, 25, 50, 100],
   onRowsPerPageChange,
-}: PaginationProps) {
+}: Readonly<PaginationProps>) {
   const current = clamp(page, 1, Math.max(1, totalPages));
   const pages = useMemo(() => getPages(current, totalPages, variant), [current, totalPages, variant]);
 
@@ -68,6 +69,7 @@ export default function Pagination({
                 </option>
               ))}
             </select>
+            {totalElement > 0 && (<span className="pg__label">của <span className="fw-bold">{totalElement}</span> bản ghi</span>)}
           </>
         )}
       </div>

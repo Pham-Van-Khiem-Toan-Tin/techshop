@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type React from "react";
 
 export type Align = "left" | "right";
@@ -14,7 +15,7 @@ export type Column<T> = {
 
 export type TableAction<T> = {
   key: string;
-  label: string | Element;
+  label: string | Element | ReactNode;
   tone?: "default" | "danger";
   visible?: (row: T) => boolean;
   disabled?: (row: T) => boolean;

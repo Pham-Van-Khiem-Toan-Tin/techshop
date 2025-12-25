@@ -29,3 +29,11 @@ export interface FunctionEntity {
   sortOrder: number;
   subFunctions: SubFunction[];
 }
+
+export interface FunctionData {
+  id: string;
+  name: string;
+  description: string;
+  sortOrder: number;
+  quantityPermission: number
+}
