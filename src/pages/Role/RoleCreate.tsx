@@ -9,7 +9,7 @@ import { toSection, type FunctionEntity } from '../../types/function.type'
 import { Link } from 'react-router'
 
 type RoleInput = {
-  Id: string,
+  id: string,
   name: string,
   description: string
 }
@@ -53,13 +53,13 @@ const RoleCreate = () => {
           <form id="role-form" onSubmit={handleSubmit(onSubmit)} className='form-app p-2'>
             <div>
               <label htmlFor="ID">ID vai trò: <span className="text-danger">*</span></label>
-              <input {...register("Id", {
+              <input {...register("id", {
                 required: {
                   value: true,
                   message: "Id không được để trống."
                 }
               })} type="text" id='ID' className='form-control form-control-sm' placeholder='Ví dụ: ROLE_EXAMPLE' />
-              {errors.Id && <span className='form-message-error'>{errors.Id?.message}</span>}
+              {errors.id && <span className='form-message-error'>{errors.id?.message}</span>}
             </div>
             <div>
               <label htmlFor="name">Tên vai trò: <span className="text-danger">*</span></label>

@@ -19,17 +19,21 @@ export const toSection = (fct: FunctionEntity[] | undefined | null): Section[] =
 export interface SubFunction {
   id: string;
   name: string;
-  description: string;
-  sortOrder: number;
+  description?: string;
+  sortOrder?: number;
 }
 export interface FunctionEntity {
   id: string;
   name: string;
   description: string;
+  icon: string | null;
   sortOrder: number;
-  subFunctions: SubFunction[];
+  subFunctions: SubFunction[] | null;
 }
-
+export interface FunctionOption {
+  id: string,
+  name: string
+}
 export interface FunctionData {
   id: string;
   name: string;
