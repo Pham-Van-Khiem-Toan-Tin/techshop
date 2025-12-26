@@ -6,7 +6,7 @@ import {
   parseAsString,
   parseAsNativeArrayOf,
 } from "nuqs";
-import { useGetRolesQuery } from '../../features/roles/role.api';
+import { useDeleteRoleMutation, useGetRolesQuery } from '../../features/roles/role.api';
 import type { Role } from '../../types/role.type';
 import type { Column } from '../../types/table.type';
 import Pagination from '../../components/common/Pagination';
@@ -15,7 +15,9 @@ import { RiDeleteBin6Line, RiEditLine, RiEyeLine } from 'react-icons/ri';
 import { FilterIndicator } from "../../components/common/FilterIndicator ";
 import { SortIndicator } from "../../components/common/SortIndicator ";
 import type { Page } from "../../types/page.type";
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
+import { toast } from 'react-toastify';
+import { Modal } from 'react-bootstrap';
 const SIZE_OPTIONS = [10, 25, 50, 100] as const;
 const DEFAULT_SIZE = 10;
 const normalizeSize = (raw: number) =>
@@ -42,7 +44,7 @@ const RoleManagement = () => {
     sort: parseAsString.withDefault("id:asc"),
   });
   console.log("render");
-  
+
   // normalize page/size từ URL
   const uiPage = Math.max(1, query.page);
   const size = normalizeSize(query.size);
@@ -124,7 +126,26 @@ const RoleManagement = () => {
     keywordInput !== query.q ||
     sortDraft !== query.sort ||
     JSON.stringify(fieldDraft) !== JSON.stringify(query.field);
+  const navigate = useNavigate()
 
+
+  const [deleteTarget, setDeleteTarget] = useState<Role | null>(null);
+  const isDeleteOpen = !!deleteTarget;
+
+  const closeDelete = () => setDeleteTarget(null);
+  const [deleteSubFunction, { isLoading: isDeleting }] = useDeleteRoleMutation()
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+
+    try {
+      await deleteSubFunction(deleteTarget.id).unwrap();
+
+      toast.success(`Đã xoá "${deleteTarget.id}"`);
+      closeDelete();
+    } catch (e: any) {
+      toast.error(e?.data?.message ?? "Có lỗi xảy ra");
+    }
+  };
   return (
     <div className="container-fluid py-3 d-grid gap-3">
       {/* Search */}
@@ -216,17 +237,13 @@ const RoleManagement = () => {
           width: 320,
           title: "Thao tác",
           items: [
-            { key: "view", label: <RiEyeLine />, onClick: (r) => console.log("view", r.id) },
-            { key: "edit", label: <RiEditLine />, onClick: (r) => console.log("edit", r.id) },
+            { key: "view", label: <RiEyeLine />, onClick: (r) => navigate(`view/${r.id}`) },
+            { key: "edit", label: <RiEditLine />, onClick: (r) => navigate(`edit/${r.id}`) },
             {
               key: "delete",
               label: <RiDeleteBin6Line />,
               tone: "danger",
-              onClick: (r) => {
-                if (window.confirm(`Delete role "${r.name}"?`)) {
-                  console.log("delete", r.id);
-                }
-              },
+              onClick: (r) => setDeleteTarget(r),
             },
           ],
         }}
@@ -264,6 +281,51 @@ const RoleManagement = () => {
           </div>
         </div>
       )}
+
+
+      {/* ---- Delete Modal */}
+      <Modal
+        show={isDeleteOpen}
+        onHide={closeDelete}
+        centered
+        dialogClassName="modal-app"
+        backdropClassName="modal-app-backdrop"
+      >
+        <Modal.Header>
+          <Modal.Title>
+            <span className="fw-bold fs-5">Xác nhận xoá</span>
+          </Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          <div className="mb-2">
+            Bạn có chắc chắn muốn xoá vai trò:
+          </div>
+
+          <div className="p-3 rounded" style={{ background: "var(--neutral-50)", border: "1px solid var(--app-border)" }}>
+            <div className="fw-semibold">{deleteTarget?.name}</div>
+            <div className="text-muted" style={{ color: "var(--app-text-muted)" }}>
+              ID: {deleteTarget?.id}
+            </div>
+          </div>
+
+          <div className="mt-3" style={{ color: "var(--app-text-muted)" }}>
+            Hành động này không thể hoàn tác.
+          </div>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <button type="button" className="btn-app btn-app--sm btn-app--ghost p-3" onClick={closeDelete}>
+            Huỷ
+          </button>
+          <button type="button" className="btn-app btn-app--sm btn-app--danger" onClick={handleConfirmDelete}>
+            <RiDeleteBin6Line />
+            Xoá
+          </button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* ...*/}
     </div>
   )
 }

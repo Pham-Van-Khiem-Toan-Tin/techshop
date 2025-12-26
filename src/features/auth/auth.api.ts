@@ -1,15 +1,15 @@
 import { api } from "../../lib/axios";
 
 export type User = {
-  id: string;
-  email: string;
-  name: string;
-  permission: string[];
+  userId: string;
+  userName: string;
+  permissions: string[];
 };
 
 export async function getMe() {
-  const res = await api.get<{ user: User }>("/auth/me");
-  return res.data.user;
+  const res = await api.get<User>("/auth/me");
+  
+  return res.data;
 }
 
 export async function logoutRequest() {

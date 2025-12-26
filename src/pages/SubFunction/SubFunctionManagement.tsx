@@ -12,7 +12,7 @@ import type { SubFunction } from "../../types/function.type";
 import type { Column } from "../../types/table.type";
 import Pagination from "../../components/common/Pagination";
 import DataTable from "../../components/common/DataTable";
-import { RiCloseLine, RiDeleteBin6Line, RiEditLine, RiEyeLine } from "react-icons/ri";
+import {  RiDeleteBin6Line, RiEditLine, RiEyeLine } from "react-icons/ri";
 import { FilterIndicator } from "../../components/common/FilterIndicator ";
 import { SortIndicator } from "../../components/common/SortIndicator ";
 import type { Page } from "../../types/page.type";

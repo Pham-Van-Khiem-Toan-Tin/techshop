@@ -6,7 +6,9 @@ import { RiSave3Line } from 'react-icons/ri'
 import AccordionSelect, { type Section } from '../../components/common/AccordionSelect'
 import { useGetAllFunctionsQuery } from '../../features/functions/function.api'
 import { toSection, type FunctionEntity } from '../../types/function.type'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
+import { useCreateRoleMutation } from '../../features/roles/role.api'
+import { toast } from 'react-toastify'
 
 type RoleInput = {
   id: string,
@@ -34,18 +36,41 @@ const RoleCreate = () => {
     () => toSection(functions),
     [functions]
   )
+  console.log(selected);
+  const [disabledForm, setDisabledForm] = useState<boolean>(false)
+  const navigate = useNavigate()
+  const [createRole] = useCreateRoleMutation()
+  const onSubmit: SubmitHandler<RoleInput> = async (data: RoleInput) => {
+    const id = data.id.trim();
+    const name = data.name.trim()
+    const description = data.description.trim()
+    try {
+      setDisabledForm(true)
+      console.log(id);
+      
+      const res = await createRole({ id, name, description, subFunctions: selected }).unwrap();
+      toast.success(res.message)
+      setTimeout(() => {
+        navigate("/roles", { replace: true })
+        setDisabledForm(false)
+      }, 1500);
+    } catch (error: any) {
+      console.log(error);
+      setDisabledForm(false)
+      toast.error(error?.data?.message ?? "Có lỗi xảy ra");
+    }
 
-  const onSubmit: SubmitHandler<RoleInput> = (data: RoleInput) => console.log(data);
+  };
 
   return (
     <div className='p-2 border-app--rounded bg-surface'>
       <div className='d-flex align-items-center justify-content-end my-2'>
         <div className='d-flex align-items-center gap-2'>
-        <Link to="/roles" className='btn-app btn-app--sm btn-app--ghost' >Hủy</Link>
-        <button type='submit' form='role-form' className='btn-app btn-app btn-app--sm btn-app--default'>
-          <RiSave3Line />
-          <span>Lưu</span>
-        </button>
+          <Link to="/roles" className='btn-app btn-app--sm btn-app--ghost' >Hủy</Link>
+          <button type='submit' form='role-form' className='btn-app btn-app btn-app--sm btn-app--default'>
+            <RiSave3Line />
+            <span>Lưu</span>
+          </button>
         </div>
       </div>
       <Row className='g-4'>
@@ -53,7 +78,7 @@ const RoleCreate = () => {
           <form id="role-form" onSubmit={handleSubmit(onSubmit)} className='form-app p-2'>
             <div>
               <label htmlFor="ID">ID vai trò: <span className="text-danger">*</span></label>
-              <input {...register("id", {
+              <input disabled={disabledForm} {...register("id", {
                 required: {
                   value: true,
                   message: "Id không được để trống."
@@ -63,7 +88,7 @@ const RoleCreate = () => {
             </div>
             <div>
               <label htmlFor="name">Tên vai trò: <span className="text-danger">*</span></label>
-              <input {...register("name", {
+              <input disabled={disabledForm} {...register("name", {
                 required: {
                   value: true,
                   message: "Tên không được để trống."
@@ -73,7 +98,7 @@ const RoleCreate = () => {
             </div>
             <div>
               <label htmlFor="description">Mô tả: <span className="text-danger">*</span></label>
-              <textarea {...register("description", {
+              <textarea disabled={disabledForm} {...register("description", {
                 required: {
                   value: true,
                   message: "Mô tả không được để trống."
@@ -86,7 +111,7 @@ const RoleCreate = () => {
             <div className='f-medium'>Tóm tắt</div>
             <div className='d-flex align-items-center justify-content-between'>
               <span className='f-body-2xs'>Chức năng đã chọn:</span>
-              <span className='d-inline-block bg-white py-1 px-2 app-radius__sm f-body-xs' >0</span>
+              <span className='d-inline-block bg-white py-1 px-2 app-radius__sm f-body-xs' >{selected.length}</span>
             </div>
           </div>
         </Col>
@@ -97,8 +122,10 @@ const RoleCreate = () => {
           </div>
           <div className='d-flex flex-column gap-2'>
             <AccordionSelect
+              disabled={disabledForm}
               sections={sections}
               value={selected}
+              selectedValue={[]}
               onChange={setSelected}
             />
           </div>

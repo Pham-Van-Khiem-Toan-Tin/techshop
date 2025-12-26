@@ -25,7 +25,7 @@ const Topbar = () => {
     const [show, setShow] = useState(false);
     const target = useRef(null);
     const dispatch = useAppDispatch();
-    const { status } = useAppSelector((state) => state.auth)
+    const { status, user } = useAppSelector((state) => state.auth)
     return (
         <div className="d-flex align-items-center w-100 justify-content-between gap-2 p-3">
             <div>
@@ -53,6 +53,7 @@ const Topbar = () => {
                         </Tooltip>
                     )}
                 </Overlay>
+                <span>{user?.userName}</span>
                 <button className="avatar" type="button" ref={ref} {...anchorProps}>
                     <Avatar size="sm" src={DefaultAvatar} alt="avatar" />
                 </button>

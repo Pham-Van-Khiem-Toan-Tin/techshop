@@ -1,6 +1,6 @@
-import { Accordion, Col, Row } from "react-bootstrap"
-import "../../styles/components/_accordion.scss"
-import type React from "react"
+import { Accordion, Col, Row } from "react-bootstrap";
+import "../../styles/components/_accordion.scss";
+import type React from "react";
 import { useEffect, useMemo, useRef } from "react";
 
 type Option = {
@@ -8,8 +8,8 @@ type Option = {
   label: React.ReactNode;
   description: string;
   order: number;
-  disabled?: boolean
-}
+  disabled?: boolean;
+};
 
 export type Section = {
   key: string;
@@ -17,39 +17,58 @@ export type Section = {
   title: React.ReactNode;
   options: Option[];
   order: number;
-  disabled?: boolean
-}
+  disabled?: boolean;
+};
 
 type AccordionSelectProps = {
   sections: Section[];
+
+  /** mảng đang render/đang chọn hiện tại (controlled) */
   value: string[];
+
+  /** mảng những cái đã được chọn sẵn (edit page) để so sánh */
+  selectedValue?: string[];
+
   onChange: (next: string[]) => void;
-  defaultActiveKey?: string
-}
+  defaultActiveKey?: string;
+
+  /** disable toàn bộ component */
+  disabled?: boolean;
+};
 
 const AccordionSelect: React.FC<AccordionSelectProps> = ({
   sections,
   value,
+  selectedValue = [],
   onChange,
-  defaultActiveKey = '0'
+  defaultActiveKey = "0",
+  disabled = false,
 }) => {
   const parentRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const selectedSet = useMemo(() => new Set(value), [value])
+
+  const selectedSet = useMemo(() => new Set(value), [value]);
+  const baseSelectedSet = useMemo(() => new Set(selectedValue), [selectedValue]);
+
   const getSectionSelecTableIds = (section: Section) =>
     section.options.filter((o) => !o.disabled).map((o) => o.id);
+
   const getSectionStats = (section: Section) => {
-    const selectTableIds = getSectionSelecTableIds(section)
+    const selectTableIds = getSectionSelecTableIds(section);
     const total = selectTableIds.length;
     const selected = selectTableIds.filter((id) => selectedSet.has(id)).length;
-    return { total, selected, selectTableIds }
-  }
+    return { total, selected, selectTableIds };
+  };
+
   const toggleOption = (id: string) => {
-    const next = new Set(selectedSet)
-    if (next.has(id)) next.delete(id)
-    else next.add(id)
-    onChange(Array.from(next))
-  }
+    if (disabled) return;
+    const next = new Set(selectedSet);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    onChange(Array.from(next));
+  };
+
   const toggleSectionAll = (section: Section) => {
+    if (disabled) return;
     const { total, selected, selectTableIds } = getSectionStats(section);
     const next = new Set(selectedSet);
 
@@ -61,13 +80,23 @@ const AccordionSelect: React.FC<AccordionSelectProps> = ({
 
     onChange(Array.from(next));
   };
+
+  // giữ nguyên style cũ: trả về string className như trước
   const isSectionNotDisabled = (section: Section) => {
-    let classPre = "mt-1 mb-2 "
-    if(section.disabled || section.options.length === 0) {
-      classPre = classPre + "accordion-disabled "
+    let classPre = "mt-1 mb-2 ";
+    // thêm disabled toàn cục vào điều kiện
+    if (disabled || section.disabled || section.options.length === 0) {
+      classPre = classPre + "accordion-disabled ";
     }
-    return classPre + "accordion-item"
-  }
+    return classPre + "accordion-item";
+  };
+
+  // tiện cho edit page (chưa dùng để style => không ảnh hưởng UI cũ)
+  const wasChecked = (id: string) => baseSelectedSet.has(id);
+  const isAdded = (id: string) => selectedSet.has(id) && !baseSelectedSet.has(id);
+  const isRemoved = (id: string) => !selectedSet.has(id) && baseSelectedSet.has(id);
+  // bạn có thể dùng 3 hàm trên nếu muốn render badge/tooltip sau này
+
   useEffect(() => {
     sections.forEach((section) => {
       const ref = parentRefs.current[section.key];
@@ -84,58 +113,66 @@ const AccordionSelect: React.FC<AccordionSelectProps> = ({
     <Accordion defaultActiveKey={defaultActiveKey} alwaysOpen>
       {sections.map((section) => {
         const { total, selected } = getSectionStats(section);
-        // const isAll = total > 0 && selected === total;
         const isAny = selected > 0;
-        return (
 
-          <Accordion.Item bsPrefix={isSectionNotDisabled(section)} eventKey={section.eventKey} key={section.key} >
-            <Accordion.Header aria-disabled={!isSectionNotDisabled(section)}>
+        // section disabled thực tế (kết hợp global + section + empty)
+        const sectionDisabled = disabled || section.disabled || section.options.length === 0;
+
+        return (
+          <Accordion.Item
+            bsPrefix={isSectionNotDisabled(section)}
+            eventKey={section.eventKey}
+            key={section.key}
+          >
+            <Accordion.Header aria-disabled={sectionDisabled}>
               <div className="d-flex align-items-center justify-content-between form-app">
                 <div className="d-flex align-items-center">
-                  {/* <div className="cb me-2"> */}
                   <input
                     ref={(el) => {
-                      parentRefs.current[section.key] = el
+                      parentRefs.current[section.key] = el;
                     }}
                     className="me-2"
                     type="checkbox"
                     checked={isAny}
-                    disabled={section.disabled || total === 0}
+                    disabled={sectionDisabled || total === 0}
                     onChange={() => toggleSectionAll(section)}
                     onClick={(e) => e.stopPropagation()} // tránh click làm toggle accordion
                     onFocus={(e) => e.stopPropagation()}
                   />
-                  {/* <span className="cb__box" /> */}
-                  {/* </div> */}
-                  <span className="f-bold text-black align-middle f-body d-inline-block">{section.title}</span>
+                  <span className="f-bold text-black align-middle f-body d-inline-block">
+                    {section.title}
+                  </span>
                 </div>
 
-                <span className="total-select text-dark f-body-3xs">{selected}/{total}</span>
-
-
+                <span className="total-select text-dark f-body-3xs">
+                  {selected}/{total}
+                </span>
               </div>
             </Accordion.Header>
+
             {isSectionNotDisabled(section) && (
               <Accordion.Body>
                 <Row className="g-2">
                   {section.options.map((opt) => {
                     const checked = selectedSet.has(opt.id);
-                    const disabled = section.disabled || opt.disabled;
+                    const optDisabled = disabled || section.disabled || opt.disabled;
+
                     return (
                       <Col xs={12} md={6} key={opt.id}>
                         <button
                           className={[
                             "perm-option-card w-100",
                             checked ? "is-selected" : "",
-                            disabled ? "is-disabled" : "",
+                            optDisabled ? "is-disabled" : "",
                           ].join(" ")}
                           type="button"
                           tabIndex={0}
+                          disabled={optDisabled}
                           onClick={() => {
-                            if (!disabled) toggleOption(opt.id);
+                            if (!optDisabled) toggleOption(opt.id);
                           }}
                           onKeyDown={(e) => {
-                            if (disabled) return;
+                            if (optDisabled) return;
                             if (e.key === "Enter" || e.key === " ") toggleOption(opt.id);
                           }}
                         >
@@ -144,7 +181,7 @@ const AccordionSelect: React.FC<AccordionSelectProps> = ({
                               className="perm-checkbox"
                               type="checkbox"
                               checked={checked}
-                              disabled={disabled}
+                              disabled={optDisabled}
                               onChange={() => toggleOption(opt.id)}
                               onClick={(e) => e.stopPropagation()} // tránh click double
                             />
@@ -158,16 +195,16 @@ const AccordionSelect: React.FC<AccordionSelectProps> = ({
                           </div>
                         </button>
                       </Col>
-                    )
+                    );
                   })}
                 </Row>
               </Accordion.Body>
             )}
           </Accordion.Item>
-        )
+        );
       })}
     </Accordion>
-  )
-}
+  );
+};
 
-export default AccordionSelect
+export default AccordionSelect;
