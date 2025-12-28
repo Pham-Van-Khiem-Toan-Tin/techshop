@@ -17,7 +17,7 @@ import {
   useUpdateSubFunctionMutation,
 } from "../../features/subfunction/subfunction.api"
 import { useDebounce } from "../../hooks/useDebounce"
-import type { SubFunctionForm } from "../../types/subFunction.type"
+import type { SubFunctionCreateForm, SubFunctionEditForm } from "../../types/subFunction.type"
 import { Modal } from "react-bootstrap"
 import { toast } from "react-toastify"
 
@@ -66,10 +66,11 @@ const FunctionEdit = () => {
   useEffect(() => {
     if (!functionDetail) return
     console.log(functionDetail);
-    
+
     // reset toàn bộ form theo data backend
     reset({
       id: functionDetail.id,
+      code: functionDetail.code,
       name: functionDetail.name,
       icon: functionDetail.icon ?? null,
       sortOrder: functionDetail.sortOrder,
@@ -162,11 +163,12 @@ const FunctionEdit = () => {
         keyword: debouncedSearch,
         ids: selectedIds ? selectedIds.map((sl) => sl.id) : [],
       }).unwrap()
+      console.log(res);
 
       setOptions(
         res.map((x: any) => ({
           value: x.id,
-          label: `${x.id}: ${x.name}`,
+          label: `${x.code}`,
           name: x.name,
           description: x.description ?? "",
         }))
@@ -180,7 +182,7 @@ const FunctionEdit = () => {
     setSelected(null)
     if (!opt) return
 
-    const newItem = { id: opt.value, name: opt.name, description: opt.description }
+    const newItem = { id: opt.value, code: opt.label, name: opt.name, description: opt.description }
 
     if (selectedIds && selectedIds.length > 0) {
       const indexExist = selectedIds.findIndex((s) => s.id === opt.value)
@@ -216,7 +218,7 @@ const FunctionEdit = () => {
     handleSubmit: handleSubmitCreate,
     reset: resetCreate,
     formState: { errors: createErrors },
-  } = useForm<SubFunctionForm>({
+  } = useForm<SubFunctionCreateForm>({
     defaultValues: { id: "", name: "", description: "" },
   })
 
@@ -225,12 +227,12 @@ const FunctionEdit = () => {
     handleSubmit: handleSubmitEdit,
     reset: resetEdit,
     formState: { errors: editErrors },
-  } = useForm<SubFunctionForm>({
+  } = useForm<SubFunctionEditForm>({
     defaultValues: { id: "", name: "", description: "" },
   })
 
   const openCreate = () => {
-    resetCreate({ id: "", name: "", description: "" })
+    resetCreate({ code: "", name: "", description: "" })
     setIsCreateOpen(true)
   }
   const closeCreate = () => setIsCreateOpen(false)
@@ -239,6 +241,7 @@ const FunctionEdit = () => {
     const itemEdit = selectedIds?.find((x) => x.id === id)
     resetEdit({
       id,
+      code: itemEdit?.code ?? "",
       name: itemEdit?.name ?? "",
       description: itemEdit?.description ?? "",
     })
@@ -247,12 +250,11 @@ const FunctionEdit = () => {
   const closeEdit = () => setIsEditOpen(false)
 
   const [createSubFunction] = useCreateSubFunctionMutation()
-  const handleCreateSubFunctionRHF: SubmitHandler<SubFunctionForm> = async (data) => {
-    const id = data.id.trim()
+  const handleCreateSubFunctionRHF: SubmitHandler<SubFunctionCreateForm> = async (data) => {
+    const code = data.code.trim()
     const name = data.name.trim()
     const description = (data.description ?? "").trim()
-
-    const exists = selectedIds?.some((x) => x.id === id)
+    const exists = selectedIds?.some((x) => x.code === code)
     if (exists) {
       toast.error("Thông tin quyền hạn bị trùng")
       return
@@ -260,14 +262,17 @@ const FunctionEdit = () => {
 
     try {
       setDisabledForm(true)
-      const res = await createSubFunction({ id, name, description }).unwrap()
+      const res = await createSubFunction({ code, name, description }).unwrap()
       toast.success(res.message ?? "Tạo quyền hạn thành công")
       closeCreate()
-      setValue(
-        "subFunctions",
-        [...(selectedIds ?? []), { id, name, description }],
-        { shouldDirty: true, shouldValidate: true }
-      )
+      if (res.data) {
+        setValue(
+          "subFunctions",
+          [...(selectedIds ?? []), { id: res.data, code, name, description }],
+          { shouldDirty: true, shouldValidate: true }
+        )
+
+      }
     } catch (err: any) {
       toast.error(err?.data?.message ?? "Có lỗi xảy ra")
     } finally {
@@ -276,14 +281,15 @@ const FunctionEdit = () => {
   }
 
   const [updateSubFunction] = useUpdateSubFunctionMutation()
-  const handleEditSubFunctionRHF: SubmitHandler<SubFunctionForm> = async (data) => {
-    const id = data.id
+  const handleEditSubFunctionRHF: SubmitHandler<SubFunctionEditForm> = async (data) => {
+    const id = data.id;
+    const code = data.code.trim();
     const name = data.name.trim()
     const description = (data.description ?? "").trim()
 
     try {
       setDisabledForm(true)
-      const res = await updateSubFunction({ id, body: { id, name, description } }).unwrap()
+      const res = await updateSubFunction({ id, body: { id, code, name, description } }).unwrap()
       toast.success(res.message ?? "Cập nhật quyền hạn thành công")
 
       setValue(
@@ -362,21 +368,40 @@ const FunctionEdit = () => {
           </div>
 
           {/* ID (thường edit không cho sửa) */}
-          <div className="col-12 col-md-6">
-            <label className="form-label" htmlFor="code">
-              ID chức năng: <span className="text-danger f-micro">(Khóa duy nhất)</span>
+          <div className="col-12 col-md-6" hidden>
+            <label className="form-label" htmlFor="id">
+              Mã chức năng: <span className="text-danger f-micro">(Khóa duy nhất)</span>
             </label>
             <input
               {...register("id", {
-                required: { value: true, message: "Id không được để trống." },
+                required: { value: true, message: "Mã chức năng không được để trống." },
+              })}
+              className="form-control form-control-sm"
+              id="id"
+              disabled
+              readOnly
+              type="text"
+              placeholder="Ví dụ: EXAMPLE_MANAGEMENT"
+            />
+            {errors.id && (
+              <span className="form-message-error">{errors.id.message}</span>
+            )}
+          </div>
+          <div className="col-12 col-md-6">
+            <label className="form-label" htmlFor="code">
+              Mã chức năng: <span className="text-danger f-micro">(Khóa duy nhất)</span>
+            </label>
+            <input
+              {...register("code", {
+                required: { value: true, message: "Mã chức năng không được để trống." },
               })}
               className="form-control form-control-sm"
               id="code"
               type="text"
               placeholder="Ví dụ: EXAMPLE_MANAGEMENT"
             />
-            {errors.id && (
-              <span className="form-message-error">{errors.id.message}</span>
+            {errors.code && (
+              <span className="form-message-error">{errors.code.message}</span>
             )}
           </div>
 
@@ -529,7 +554,7 @@ const FunctionEdit = () => {
                     <th className="col-tt">
                       <span className="ps-2 d-inline-block">TT</span>
                     </th>
-                    <th className="col-id">ID</th>
+                    <th className="col-id">Mã quyền hạn</th>
                     <th>Tên</th>
                     <th>Mô tả</th>
                     <th className="col-actions text-end">Thao tác</th>
@@ -542,7 +567,7 @@ const FunctionEdit = () => {
                       <td className="col-tt">
                         <span className="ps-2 d-inline-block">{index + 1}</span>
                       </td>
-                      <td className="fw-600">{sl.id}</td>
+                      <td className="fw-600">{sl.code}</td>
                       <td className="text-muted">{sl.name}</td>
                       <td className="text-muted">{sl.description}</td>
                       <td className="col-actions">
@@ -602,16 +627,16 @@ const FunctionEdit = () => {
           <Modal.Body bsPrefix="form-app modal-body">
             <div className="mb-3">
               <label className="form-label">
-                ID quyền <span className="text-danger">*</span>
+                Mã quyền <span className="text-danger">*</span>
               </label>
               <input
                 disabled={disabledForm}
                 className="form-control form-control-sm"
                 placeholder="Ví dụ: USER_CREATE"
-                {...registerCreate("id", { required: "ID không được để trống" })}
+                {...registerCreate("code", { required: "Mã quyền hạn không được để trống" })}
               />
-              {createErrors.id && (
-                <span className="form-message-error">{createErrors.id.message}</span>
+              {createErrors.code && (
+                <span className="form-message-error">{createErrors.code.message}</span>
               )}
             </div>
 
@@ -677,11 +702,23 @@ const FunctionEdit = () => {
 
         <form onSubmit={handleSubmitEdit(handleEditSubFunctionRHF)}>
           <Modal.Body bsPrefix="form-app modal-body">
-            <div className="mb-3">
+            <div className="mb-3" hidden>
               <label className="form-label">ID quyền</label>
               <input className="form-control" disabled {...registerEdit("id")} />
             </div>
-
+            <div className="mb-3">
+              <label className="form-label">
+                Mã quyền: <span className="text-danger">*</span>
+              </label>
+              <input
+                disabled={disabledForm}
+                className="form-control form-control-sm"
+                {...registerEdit("code", { required: "Tên không được để trống" })}
+              />
+              {editErrors.code && (
+                <span className="form-message-error">{editErrors.code.message}</span>
+              )}
+            </div>
             <div className="mb-3">
               <label className="form-label">
                 Tên quyền <span className="text-danger">*</span>

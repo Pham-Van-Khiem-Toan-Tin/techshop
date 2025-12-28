@@ -3,8 +3,8 @@ import { baseQuery } from "../../lib/baseQuery";
 import type { Page } from "../../types/page.type";
 import type { SubFunction } from "../../types/function.type";
 import type { ApiResponse } from "../../types/api.type";
-import type { SubFunctionForm } from "../../types/subFunction.type";
-type UpdateArg = { id: string; body: SubFunctionForm };
+import type { SubFunctionCreateForm, SubFunctionEditForm, SubFunctionForm } from "../../types/subFunction.type";
+type UpdateArg = { id: string; body: SubFunctionEditForm };
 type SubFunctionSearch = {
   keyword: string;
   ids: string[];
@@ -55,7 +55,7 @@ export const subFunctionApi = createApi({
       keepUnusedDataFor: 0, // xóa cache ngay khi unmount
       providesTags: (result, error, id) => [{ type: "SubFunction", id }],
     }),
-    createSubFunction: builder.mutation<ApiResponse, SubFunctionForm>({
+    createSubFunction: builder.mutation<ApiResponse<string>, SubFunctionCreateForm>({
       query: (body) => ({
         url: "/auth/subfunctions",
         method: "POST",

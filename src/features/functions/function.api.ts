@@ -2,6 +2,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQuery } from "../../lib/baseQuery";
 
 import type {
+  FunctionCreateForm,
   FunctionData,
   FunctionEntity,
   FunctionOption,
@@ -78,7 +79,7 @@ export const functionApi = createApi({
           : [{ type: "Function_Option" as const, id: "LIST" }],
       keepUnusedDataFor: 30,
     }),
-    createFunction: builder.mutation<ApiResponse, FunctionEntity>({
+    createFunction: builder.mutation<ApiResponse, FunctionCreateForm>({
       query: (body) => ({
         url: "/auth/functions",
         method: "POST",

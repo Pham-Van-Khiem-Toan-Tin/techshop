@@ -96,7 +96,7 @@ const RoleManagement = () => {
 
   const columns = useMemo<Column<Role>[]>(() =>
     [
-      { key: "id", title: "ID", strong: true, render: (r) => r.id },
+      { key: "code", title: "ID", strong: true, render: (r) => r.code },
       { key: "name", title: "Tên", muted: true, render: (r) => r.name },
       { key: "description", title: "Mô tả", muted: true, render: (r) => r.description },
       { key: "quantityPermission", title: "Số lượng quyền hạn", muted: true, render: (r) => r.quantityPermission },
@@ -140,7 +140,7 @@ const RoleManagement = () => {
     try {
       await deleteSubFunction(deleteTarget.id).unwrap();
 
-      toast.success(`Đã xoá "${deleteTarget.id}"`);
+      toast.success(`Đã xoá "${deleteTarget.code}"`);
       closeDelete();
     } catch (e: any) {
       toast.error(e?.data?.message ?? "Có lỗi xảy ra");

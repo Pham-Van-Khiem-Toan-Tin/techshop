@@ -11,7 +11,7 @@ import { useCreateRoleMutation } from '../../features/roles/role.api'
 import { toast } from 'react-toastify'
 
 type RoleInput = {
-  id: string,
+  code: string,
   name: string,
   description: string
 }
@@ -41,14 +41,14 @@ const RoleCreate = () => {
   const navigate = useNavigate()
   const [createRole] = useCreateRoleMutation()
   const onSubmit: SubmitHandler<RoleInput> = async (data: RoleInput) => {
-    const id = data.id.trim();
+    const code = data.code.trim();
     const name = data.name.trim()
     const description = data.description.trim()
     try {
       setDisabledForm(true)
-      console.log(id);
+      console.log(code);
       
-      const res = await createRole({ id, name, description, subFunctions: selected }).unwrap();
+      const res = await createRole({ code, name, description, subFunctions: selected }).unwrap();
       toast.success(res.message)
       setTimeout(() => {
         navigate("/roles", { replace: true })
@@ -77,14 +77,14 @@ const RoleCreate = () => {
         <Col lg={4}>
           <form id="role-form" onSubmit={handleSubmit(onSubmit)} className='form-app p-2'>
             <div>
-              <label htmlFor="ID">ID vai trò: <span className="text-danger">*</span></label>
-              <input disabled={disabledForm} {...register("id", {
+              <label htmlFor="code">Mã vai trò: <span className="text-danger">*</span></label>
+              <input disabled={disabledForm} {...register("code", {
                 required: {
                   value: true,
-                  message: "Id không được để trống."
+                  message: "Mã không được để trống."
                 }
-              })} type="text" id='ID' className='form-control form-control-sm' placeholder='Ví dụ: ROLE_EXAMPLE' />
-              {errors.id && <span className='form-message-error'>{errors.id?.message}</span>}
+              })} type="text" id='code' className='form-control form-control-sm' placeholder='Ví dụ: ROLE_EXAMPLE' />
+              {errors.code && <span className='form-message-error'>{errors.code?.message}</span>}
             </div>
             <div>
               <label htmlFor="name">Tên vai trò: <span className="text-danger">*</span></label>

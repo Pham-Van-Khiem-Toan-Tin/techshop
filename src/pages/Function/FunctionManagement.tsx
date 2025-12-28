@@ -94,7 +94,7 @@ const FunctionManagement = () => {
   }, [totalPages]);
   const columns = useMemo<Column<FunctionData>[]>(() =>
     [
-      { key: "id", title: "ID", strong: true, render: (r) => r.id },
+      { key: "code", title: "Mã chức năng", strong: true, render: (r) => r.code },
       { key: "name", title: "Tên", muted: true, render: (r) => r.name },
       { key: "description", title: "Mô tả", muted: true, render: (r) => r.description },
       { key: "quantityPermission", title: "Số lượng quyền hạn", muted: true, render: (r) => r.quantityPermission },

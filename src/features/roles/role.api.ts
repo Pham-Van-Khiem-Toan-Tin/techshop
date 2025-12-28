@@ -1,7 +1,7 @@
 // src/features/roles/rolesApi.ts
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQuery } from "../../lib/baseQuery";
-import type { Role, RoleEditForm, RoleForm } from "../../types/role.type";
+import type { Role, RoleCreateForm, RoleEditForm, RoleForm } from "../../types/role.type";
 import type { Page } from "../../types/page.type";
 import type { ApiResponse } from "../../types/api.type";
 export const rolesApi = createApi({
@@ -43,7 +43,7 @@ export const rolesApi = createApi({
       providesTags: (result, error, id) => [{ type: "Role", id }],
       keepUnusedDataFor: 0
     }),
-    createRole: builder.mutation<ApiResponse, RoleForm>({
+    createRole: builder.mutation<ApiResponse, RoleCreateForm>({
       query: (body) => ({
         url: "/auth/roles",
         method: "POST",
@@ -51,7 +51,7 @@ export const rolesApi = createApi({
       }),
       invalidatesTags: [{ type: "Roles", id: "LIST" }],
     }),
-    updateRole: builder.mutation<ApiResponse, { id: string; body: RoleEditForm }>({
+    updateRole: builder.mutation<ApiResponse, { id: string; body: RoleForm }>({
       query: ({ id, body }) => ({
         url: `/auth/roles/${id}`,
         method: "PUT",

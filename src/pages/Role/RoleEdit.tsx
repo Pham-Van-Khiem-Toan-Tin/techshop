@@ -14,6 +14,7 @@ import { useGetRoleByIdQuery, useUpdateRoleMutation } from "../../features/roles
 
 type RoleInput = {
     id: string;
+    code: string;
     name: string;
     description: string;
 };
@@ -66,40 +67,45 @@ const RoleEdit = () => {
         if (!roleDetail) return;
 
         // tuỳ shape backend: roleDetail.id / roleDetail.data.id ...
-        const id = roleDetail.id ?? roleDetail.data?.id ?? "";
-        const name = roleDetail.name ?? roleDetail.data?.name ?? "";
-        const description = roleDetail.description ?? roleDetail.data?.description ?? "";
+        const id = roleDetail.id ?? "";
+        const code = roleDetail.code ?? "";
+        const name = roleDetail.name ?? "";
+        const description = roleDetail.description ?? "";
         const subFunctions: string[] =
             roleDetail.subFunctions ?? [];
-
+        console.log(roleDetail);
+        
         reset({
             id,
             name,
             description,
+            code
         });
 
         setSelectedBase(subFunctions);
     }, [roleDetail, reset]);
     useEffect(() => {
-  if (selected.length === 0 && baseSelected.length > 0) {
-    setSelected(baseSelected);
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [baseSelected]);
+        if (selected.length === 0 && baseSelected.length > 0) {
+            setSelected(baseSelected);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [baseSelected]);
     // ===== Submit =====
     const onSubmit: SubmitHandler<RoleInput> = async (data) => {
         const id = data.id.trim();
+        const code = data.code.trim();
         const name = data.name.trim();
         const description = data.description.trim();
         if (roleIdParam != null) {
             try {
                 setDisabledForm(true);
-
+                console.log(id);
+                
                 // ✅ tuỳ backend: thường update không cho sửa id, nhưng mình vẫn gửi id theo bạn đang form
                 const res = await updateRole({
-                    id, body: {
-                        oldId: roleIdParam,
-                        newId: id,
+                    id: roleIdParam, body: {
+                        id: id,
+                        code,
                         name,
                         description,
                         subFunctions: selected,
@@ -162,9 +168,9 @@ const RoleEdit = () => {
         <div className="p-2 border-app--rounded bg-surface">
             <div className="d-flex align-items-center justify-content-end my-2">
                 <div className="d-flex align-items-center gap-2">
-                    <Link to="/roles" className="btn-app btn-app--sm btn-app--ghost">
+                    <button onClick={() => navigate(-1)} className="btn-app btn-app--sm btn-app--ghost">
                         Hủy
-                    </Link>
+                    </button>
                     <button
                         type="submit"
                         form="role-form"
@@ -180,23 +186,36 @@ const RoleEdit = () => {
             <Row className="g-4">
                 <Col lg={4}>
                     <form id="role-form" onSubmit={handleSubmit(onSubmit)} className="form-app p-2">
-                        <div>
-                            <label htmlFor="ID">
-                                ID vai trò: <span className="text-danger">*</span>
+                        <div hidden>
+                            <label htmlFor="id">
+                                Mã vai trò: <span className="text-danger">*</span>
                             </label>
 
                             {/* Thường edit không cho sửa ID => disabled */}
                             <input
                                 disabled={true}
-                                {...register("id", {
-                                    required: { value: true, message: "Id không được để trống." },
+                                {...register("id")}
+                                type="text"
+                                id="id"
+                                className="form-control form-control-sm"
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="code">
+                                Mã vai trò: <span className="text-danger">*</span>
+                            </label>
+
+                            {/* Thường edit không cho sửa ID => disabled */}
+                            <input
+                                {...register("code", {
+                                    required: { value: true, message: "Mã không được để trống." },
                                 })}
                                 type="text"
-                                id="ID"
+                                id="code"
                                 className="form-control form-control-sm"
                                 placeholder="Ví dụ: ROLE_EXAMPLE"
                             />
-                            {errors.id && <span className="form-message-error">{errors.id?.message}</span>}
+                            {errors.code && <span className="form-message-error">{errors.code?.message}</span>}
                         </div>
 
                         <div>

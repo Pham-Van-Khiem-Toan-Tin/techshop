@@ -8,6 +8,7 @@ import type { FunctionOption } from "../../types/function.type"
 import Select from 'react-select';
 import { useCreateSubFunctionMutation } from "../../features/subfunction/subfunction.api"
 import type { SubFunctionForm } from "../../types/subFunction.type"
+import { useEffect } from "react"
 type Option = {
     label: string,
     value: string
@@ -39,9 +40,11 @@ const SubFunctionCreate = () => {
             toast.error(error?.data?.message ?? "Có lỗi xảy ra")
         }
     };
-    if (isOptionError) {
-        toast.error((errorOption as any)?.data?.message ?? "Có lỗi xảy ra");
-    }
+    useEffect(() => {
+        if (isOptionError) {
+            toast.error((errorOption as any)?.data?.message ?? "Có lỗi xảy ra");
+        }
+    }, [isOptionError, errorOption]);
     const options: Option[] = optionFunctions?.map((of: FunctionOption) => ({ label: of.name, value: of.id })) ?? [];
     return (
         <div className="d-flex justify-content-center mt-5">

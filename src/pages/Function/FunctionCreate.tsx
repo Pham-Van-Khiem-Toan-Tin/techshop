@@ -7,13 +7,13 @@ import { FiLayers, FiPlus, FiSearch } from "react-icons/fi"
 import { useNavigate } from "react-router"
 import Select, { components } from "react-select"
 import { Controller, useForm, type SubmitHandler } from "react-hook-form"
-import type { FunctionEntity } from "../../types/function.type"
+import type { FunctionCreateForm, FunctionEntity } from "../../types/function.type"
 import { optionIcons } from "../../features/data/icon.data"
 import type { IconOption } from "../../features/data/icon.data"
 import { useEffect, useState } from "react"
 import { useCreateSubFunctionMutation, useGetSubFunctionOptionsMutation, useUpdateSubFunctionMutation } from "../../features/subfunction/subfunction.api"
 import { useDebounce } from "../../hooks/useDebounce"
-import type { SubFunctionForm } from "../../types/subFunction.type"
+import type { SubFunctionCreateForm, SubFunctionEditForm, SubFunctionForm } from "../../types/subFunction.type"
 import { Modal } from "react-bootstrap"
 import { toast } from "react-toastify"
 import { useCreateFunctionMutation } from "../../features/functions/function.api"
@@ -26,7 +26,7 @@ type OptionSelect = {
 }
 const FunctionCreate = () => {
     const navigate = useNavigate()
-    const { register, setValue, watch, formState: { errors }, handleSubmit, control } = useForm<FunctionEntity>({
+    const { register, setValue, watch, formState: { errors }, handleSubmit, control } = useForm<FunctionCreateForm>({
         defaultValues: {
             icon: null,
             subFunctions: null
@@ -47,13 +47,16 @@ const FunctionCreate = () => {
             </components.Option>
         )
     }
-    const onSubmit: SubmitHandler<FunctionEntity> = async (data: FunctionEntity) => {
+    const onSubmit: SubmitHandler<FunctionCreateForm> = async (data: FunctionCreateForm) => {
         try {
-            const res = await createFunction(data).unwrap();
+            const code = data.code.trim()
+            const name = data.name.trim()
+            const description = data.description.trim()
+            const res = await createFunction({ ...data, code, name, description }).unwrap();
             toast.success(res.message)
-                        setTimeout(() => {
-                            navigate("/functions", { replace: true })
-                        }, 1500);
+            setTimeout(() => {
+                navigate("/functions", { replace: true })
+            }, 1500);
         } catch (error: any) {
             toast.error(error?.data?.message ?? "Có lỗi xảy ra")
 
@@ -106,7 +109,7 @@ const FunctionCreate = () => {
             setOptions(
                 res.map((x) => ({
                     value: x.id,
-                    label: `${x.id}: ${x.name}`,
+                    label: `${x.code}`,
                     name: x.name,
                     description: x.description ?? ""
                 }))
@@ -124,19 +127,19 @@ const FunctionCreate = () => {
         handleSubmit: handleSubmitCreate,
         reset: resetCreate,
         formState: { errors: createErrors },
-    } = useForm<SubFunctionForm>({
-        defaultValues: { id: "", name: "", description: "" },
+    } = useForm<SubFunctionCreateForm>({
+        defaultValues: { code: "", name: "", description: "" },
     });
     const {
         register: registerEdit,
         handleSubmit: handleSubmitEdit,
         reset: resetEdit,
         formState: { errors: editErrors },
-    } = useForm<SubFunctionForm>({
+    } = useForm<SubFunctionEditForm>({
         defaultValues: { id: "", name: "", description: "" },
     });
     const openCreate = () => {
-        resetCreate({ id: "", name: "", description: "" });
+        resetCreate({ code: "", name: "", description: "" });
         setIsCreateOpen(true);
     };
     const closeCreate = () => setIsCreateOpen(false);
@@ -144,21 +147,21 @@ const FunctionCreate = () => {
         const itemEdit = selectedIds?.find(x => x.id === id)
         const currentName = itemEdit?.name ?? "";
         const currentDesc = itemEdit?.description ?? "";
-
-        resetEdit({ id, name: currentName, description: currentDesc });
+        const currentCode = itemEdit?.code ?? "";
+        resetEdit({ id, code: currentCode,  name: currentName, description: currentDesc });
         setIsEditOpen(true);
     };
     const closeEdit = () => setIsEditOpen(false);
     const [disabledForm, setDisabledForm] = useState<boolean>(false)
     const [createSubFunction] = useCreateSubFunctionMutation()
 
-    const handleCreateSubFunctionRHF: SubmitHandler<SubFunctionForm> = async (data) => {
-        const id = data.id.trim();
+    const handleCreateSubFunctionRHF: SubmitHandler<SubFunctionCreateForm> = async (data) => {
+        const code = data.code.trim();
         const name = data.name.trim();
         const description = data.description.trim();
 
         // check trùng
-        const exists = selectedIds?.some(x => x.id === id);
+        const exists = selectedIds?.some(x => x.code === code);
         if (exists) {
             toast.error("Thông tin quyền hạn bị trùng")
             return;
@@ -169,11 +172,13 @@ const FunctionCreate = () => {
                 const res = await createSubFunction(data).unwrap();
                 toast.success(res.message);
                 closeCreate();
-                setValue(
-                    "subFunctions",
-                    [...(selectedIds ?? []), { id, name, description }],
-                    { shouldDirty: true, shouldValidate: true }
-                );
+                if (res.data) {
+                    setValue(
+                        "subFunctions",
+                        [...(selectedIds ?? []), { id: res.data, code, name, description }],
+                        { shouldDirty: true, shouldValidate: true }
+                    );
+                }
             } catch (error: any) {
                 toast.error(error?.data?.message ?? "Có lỗi xảy ra")
             }
@@ -182,13 +187,14 @@ const FunctionCreate = () => {
     };
     const [updateSubFunction] =
         useUpdateSubFunctionMutation();
-    const handleEditSubFunctionRHF: SubmitHandler<SubFunctionForm> = async (data) => {
+    const handleEditSubFunctionRHF: SubmitHandler<SubFunctionEditForm> = async (data) => {
         const id = data.id;
         const name = data.name.trim();
+        const code = data.code.trim();
         const description = data.description.trim();
         try {
             setDisabledForm(true)
-            const res = await updateSubFunction({ id: id, body: data }).unwrap();
+            const res = await updateSubFunction({ id: id, body: { id, code, name, description } }).unwrap();
             toast.success(res.message);
             setValue(
                 "subFunctions",
@@ -213,7 +219,7 @@ const FunctionCreate = () => {
         if (selectedIds != null && selectedIds.length > 0) {
             const indexExist = selectedIds.findIndex(s => s.id === opt.value)
             if (indexExist == -1) {
-                setValue("subFunctions", [...selectedIds, { id: opt.value, name: opt.name, description: opt.description }], {
+                setValue("subFunctions", [...selectedIds, { id: opt.value, code: opt.label, name: opt.name, description: opt.description }], {
                     shouldDirty: true,
                     shouldValidate: true,
                 });
@@ -222,7 +228,7 @@ const FunctionCreate = () => {
             return;
         };
 
-        setValue("subFunctions", [{ id: opt.value, name: opt.name, description: opt.description }])
+        setValue("subFunctions", [{ id: opt.value, code: opt.label, name: opt.name, description: opt.description }])
     };
     const remove = (id: string) => {
         console.log(id);
@@ -276,15 +282,15 @@ const FunctionCreate = () => {
                     {/* ID chức năng (phải) */}
                     <div className="col-12 col-md-6">
                         <label className="form-label" htmlFor="code">
-                            ID chức năng: <span className="text-danger f-micro">(Khóa duy nhất)</span>
+                            Mã chức năng: <span className="text-danger f-micro">(Khóa duy nhất)</span>
                         </label>
-                        <input {...register("id", {
+                        <input {...register("code", {
                             required: {
                                 value: true,
-                                message: "Id không được để trống."
+                                message: "Mã không được để trống."
                             }
                         })} className="form-control form-control-sm" id="code" type="text" placeholder="Ví dụ: EXAMPLE_MANAGEMENT" />
-                        {errors.id && <span className='form-message-error'>{errors.id?.message}</span>}
+                        {errors.code && <span className='form-message-error'>{errors.code?.message}</span>}
                     </div>
 
                     {/* Biểu tượng (trái) */}
@@ -369,13 +375,13 @@ const FunctionCreate = () => {
                             Mô tả: <span className="text-danger f-micro">*</span>
                         </label>
                         <textarea
-                        rows={4}
-                        {...register("description", {
-                            required: {
-                                value: true,
-                                message: "Mô tả không được để trống."
-                            }
-                        })} className="form-control form-control-sm" id="description" placeholder="Mô tả mục đích của chức năng này" />
+                            rows={4}
+                            {...register("description", {
+                                required: {
+                                    value: true,
+                                    message: "Mô tả không được để trống."
+                                }
+                            })} className="form-control form-control-sm" id="description" placeholder="Mô tả mục đích của chức năng này" />
                         {errors.description && <span className='form-message-error'>{errors.description?.message}</span>}
                     </div>
                 </div>
@@ -425,7 +431,7 @@ const FunctionCreate = () => {
                                 <thead>
                                     <tr>
                                         <th className="col-tt"><span className="ps-2 d-inline-block">TT</span></th>
-                                        <th className="col-id">ID</th>
+                                        <th className="col-id">Mã quyền hạn</th>
                                         <th>Tên</th>
                                         <th>Mô tả</th>
                                         <th className="col-actions text-end">Thao tác</th>
@@ -436,7 +442,7 @@ const FunctionCreate = () => {
                                     {selectedIds.map((sl, index) => (
                                         <tr key={sl.id}>
                                             <td className="col-tt"><span className="ps-2 d-inline-block">{index + 1}</span></td>
-                                            <td className="fw-600">{sl.id}</td>
+                                            <td className="fw-600">{sl.code}</td>
                                             <td className="text-muted">{sl.name}</td>
                                             <td className="text-muted">{sl.description}</td>
                                             <td className="col-actions">
@@ -492,16 +498,16 @@ const FunctionCreate = () => {
                     <Modal.Body bsPrefix="form-app modal-body">
                         <div className="mb-3">
                             <label className="form-label">
-                                ID quyền <span className="text-danger">*</span>
+                                Mã quyền: <span className="text-danger">*</span>
                             </label>
                             <input
                                 disabled={disabledForm}
                                 className="form-control form-control-sm"
                                 placeholder="Ví dụ: USER_CREATE"
-                                {...registerCreate("id", { required: "ID không được để trống" })}
+                                {...registerCreate("code", { required: "ID không được để trống" })}
                             />
-                            {createErrors.id && (
-                                <span className="form-message-error">{createErrors.id.message}</span>
+                            {createErrors.code && (
+                                <span className="form-message-error">{createErrors.code.message}</span>
                             )}
                         </div>
 
@@ -564,16 +570,27 @@ const FunctionCreate = () => {
 
                 <form onSubmit={handleSubmitEdit(handleEditSubFunctionRHF)}>
                     <Modal.Body bsPrefix="form-app modal-body">
-                        <div className="mb-3">
+                        <div className="mb-3" hidden>
                             <label className="form-label">ID quyền</label>
                             <input
-                                disabled={disabledForm}
+                                // disabled={disabledForm}
                                 className="form-control"
                                 disabled
                                 {...registerEdit("id")}
                             />
                         </div>
+                        <div className="mb-3">
+                            <label className="form-label">Mã quyền</label>
+                            <input
+                                disabled={disabledForm}
+                                className="form-control"
 
+                                {...registerEdit("code")}
+                            />
+                            {editErrors.code && (
+                                <span className="form-message-error">{editErrors.code.message}</span>
+                            )}
+                        </div>
                         <div className="mb-3">
                             <label className="form-label">
                                 Tên quyền <span className="text-danger">*</span>

@@ -75,9 +75,9 @@ const FunctionDetail = () => {
           </div>
 
           <div className="col-12 col-md-6">
-            <div className="form-label">ID chức năng</div>
+            <div className="form-label">Mã chức năng</div>
             <div className="form-control form-control-sm bg-light">
-              {functionDetail.id || "-"}
+              {functionDetail.code || "-"}
             </div>
           </div>
 

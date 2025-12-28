@@ -1,4 +1,4 @@
-import  { useMemo } from "react";
+import { useMemo } from "react";
 import { Col, Row } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import AccordionSelect, { type Section } from "../../components/common/AccordionSelect";
@@ -11,6 +11,7 @@ import { useGetRoleByIdQuery } from "../../features/roles/role.api";
 
 type RoleInput = {
   id: string;
+  code: string,
   name: string;
   description: string;
 };
@@ -39,9 +40,10 @@ const RoleDetail = () => {
   // ===== Derive role fields (NO state, NO effect) =====
   const roleValues: RoleInput = useMemo(() => {
     const id = roleDetail?.id ?? "";
+    const code = roleDetail?.code ?? "";
     const name = roleDetail?.name ?? "";
     const description = roleDetail?.description ?? "";
-    return { id, name, description };
+    return { id, name, description, code };
   }, [roleDetail]);
 
   const selected = useMemo<string[]>(() => {
@@ -104,18 +106,17 @@ const RoleDetail = () => {
             Quay lại
           </Link>
 
-          {/* Optional: nút sửa
-          <Link to={`/roles/${roleIdParam}/edit`} className="btn-app btn-app--sm btn-app--default">
-            Sửa
+          <Link to={`/roles/edit/${roleIdParam}`} className="btn-app btn-app--sm btn-app--default">
+            Chỉnh sửa
           </Link>
-          */}
+
         </div>
       </div>
 
       <Row className="g-4">
         <Col lg={4}>
           <form className="form-app p-2">
-            <div>
+            <div hidden>
               <label htmlFor="ID">
                 ID vai trò: <span className="text-danger">*</span>
               </label>
@@ -127,7 +128,18 @@ const RoleDetail = () => {
                 className="form-control form-control-sm"
               />
             </div>
-
+            <div>
+              <label htmlFor="code">
+                Mã vai trò: <span className="text-danger">*</span>
+              </label>
+              <input
+                disabled={true}
+                {...register("code")}
+                type="text"
+                id="code"
+                className="form-control form-control-sm"
+              />
+            </div>
             <div>
               <label htmlFor="name">
                 Tên vai trò: <span className="text-danger">*</span>
@@ -177,7 +189,7 @@ const RoleDetail = () => {
               sections={sections}
               value={selected}
               selectedValue={selectedBase}
-              onChange={() => {}}
+              onChange={() => { }}
             />
           </div>
         </Col>
