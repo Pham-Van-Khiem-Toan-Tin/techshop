@@ -7,16 +7,18 @@ import { FiLayers, FiPlus, FiSearch } from "react-icons/fi"
 import { useNavigate } from "react-router"
 import Select, { components } from "react-select"
 import { Controller, useForm, type SubmitHandler } from "react-hook-form"
-import type { FunctionCreateForm, FunctionEntity } from "../../types/function.type"
+import type { FunctionCreateForm } from "../../types/function.type"
 import { optionIcons } from "../../features/data/icon.data"
 import type { IconOption } from "../../features/data/icon.data"
 import { useEffect, useState } from "react"
 import { useCreateSubFunctionMutation, useGetSubFunctionOptionsMutation, useUpdateSubFunctionMutation } from "../../features/subfunction/subfunction.api"
 import { useDebounce } from "../../hooks/useDebounce"
-import type { SubFunctionCreateForm, SubFunctionEditForm, SubFunctionForm } from "../../types/subFunction.type"
+import type { SubFunctionCreateForm, SubFunctionEditForm } from "../../types/subFunction.type"
 import { Modal } from "react-bootstrap"
 import { toast } from "react-toastify"
 import { useCreateFunctionMutation } from "../../features/functions/function.api"
+import { Control, SingleValue } from "../../configs/select.config"
+import { selectStyles } from "../../features/data/select.data"
 
 type OptionSelect = {
     label: string,
@@ -24,6 +26,7 @@ type OptionSelect = {
     name: string,
     description: string
 }
+
 const FunctionCreate = () => {
     const navigate = useNavigate()
     const { register, setValue, watch, formState: { errors }, handleSubmit, control } = useForm<FunctionCreateForm>({
@@ -64,30 +67,7 @@ const FunctionCreate = () => {
     };
 
 
-    const SingleValue = (props: any) => {
-        const data = props.data as IconOption
-        const IconComp = data?.Icon
 
-        return (
-            <components.SingleValue {...props}>
-                <div className="d-flex align-items-center gap-2">
-                    {IconComp ? <IconComp size={16} /> : <span style={{ width: 16 }} />}
-                    <span>{data?.label ?? ""}</span>
-                </div>
-            </components.SingleValue>
-        )
-    }
-    const Control = ({ children, ...props }: any) => (
-        <components.Control {...props}>
-            <FiSearch style={{ marginLeft: 12, color: "#9CA3AF" }} />
-            {children}
-        </components.Control>
-    );
-    const selectStyles = {
-        control: (base: any) => ({ ...base, minHeight: 36 }),
-        valueContainer: (base: any) => ({ ...base, paddingLeft: 8 }),
-        indicatorsContainer: (base: any) => ({ ...base, height: 36 }),
-    };
     const selectedIds = watch("subFunctions");
     const [search, setSearch] = useState("");
     const debouncedSearch = useDebounce(search, 500);
@@ -148,7 +128,7 @@ const FunctionCreate = () => {
         const currentName = itemEdit?.name ?? "";
         const currentDesc = itemEdit?.description ?? "";
         const currentCode = itemEdit?.code ?? "";
-        resetEdit({ id, code: currentCode,  name: currentName, description: currentDesc });
+        resetEdit({ id, code: currentCode, name: currentName, description: currentDesc });
         setIsEditOpen(true);
     };
     const closeEdit = () => setIsEditOpen(false);

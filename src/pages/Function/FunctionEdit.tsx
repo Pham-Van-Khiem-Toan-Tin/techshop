@@ -5,7 +5,7 @@ import {
 } from "react-icons/ri"
 import { FiLayers, FiPlus, FiSearch } from "react-icons/fi"
 import { useNavigate, useParams } from "react-router"
-import Select, { components } from "react-select"
+import Select from "react-select"
 import { Controller, useForm, type SubmitHandler } from "react-hook-form"
 import type { FunctionEntity } from "../../types/function.type"
 import { optionIcons } from "../../features/data/icon.data"
@@ -28,6 +28,8 @@ import {
   useGetFunctionByIdQuery,
   useUpdateFunctionMutation,
 } from "../../features/functions/function.api"
+import { Control, SingleValue, Option} from "../../configs/select.config"
+import { selectStyles } from "../../features/data/select.data"
 
 type OptionSelect = {
   label: string
@@ -103,44 +105,9 @@ const FunctionEdit = () => {
   }
 
   // ===== Icon select render =====
-  const Option = (props: any) => {
-    const data = props.data as IconOption
-    const IconComp = data?.Icon
-    return (
-      <components.Option {...props}>
-        <div className="d-flex align-items-center gap-2">
-          {IconComp ? <IconComp size={16} /> : <span style={{ width: 16 }} />}
-          <span>{data?.label ?? ""}</span>
-        </div>
-      </components.Option>
-    )
-  }
 
-  const SingleValue = (props: any) => {
-    const data = props.data as IconOption
-    const IconComp = data?.Icon
-    return (
-      <components.SingleValue {...props}>
-        <div className="d-flex align-items-center gap-2">
-          {IconComp ? <IconComp size={16} /> : <span style={{ width: 16 }} />}
-          <span>{data?.label ?? ""}</span>
-        </div>
-      </components.SingleValue>
-    )
-  }
 
-  const Control = ({ children, ...props }: any) => (
-    <components.Control {...props}>
-      <FiSearch style={{ marginLeft: 12, color: "#9CA3AF" }} />
-      {children}
-    </components.Control>
-  )
 
-  const selectStyles = {
-    control: (base: any) => ({ ...base, minHeight: 36 }),
-    valueContainer: (base: any) => ({ ...base, paddingLeft: 8 }),
-    indicatorsContainer: (base: any) => ({ ...base, height: 36 }),
-  }
 
   // ===== SubFunctions logic (giữ giống Create) =====
   const selectedIds = watch("subFunctions")

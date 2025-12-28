@@ -83,7 +83,8 @@ const SubFunctionEdit = () => {
     // When detail loaded -> fill form
     useEffect(() => {
         if (!subFunctionDetail) return;
-
+        console.log(subFunctionDetail);
+        
         // Tùy response backend của bạn: subFunctionDetail.data hay subFunctionDetail
         // Nếu ApiResponse: { success, message, data }
         const item = (subFunctionDetail as any)?.data ?? subFunctionDetail;
@@ -91,10 +92,11 @@ const SubFunctionEdit = () => {
         reset({
             id: item?.id ?? "",
             name: item?.name ?? "",
+            code: item?.code ?? "",
             description: item?.description ?? "",
             // Nếu backend trả functionId sẵn thì dùng luôn.
             // Nếu backend trả function object: item.function?.id
-            functionId: item?.functionId ?? item?.function?.id ?? null,
+            functionId:  item?.function?.id ?? null,
         });
     }, [subFunctionDetail, reset]);
     const [isRedirecting, setIsRedirecting] = useState(false);
@@ -178,7 +180,7 @@ const SubFunctionEdit = () => {
                     </div>
 
                     <Row>
-                        <Col>
+                        <Col hidden>
                             <label htmlFor="ID">
                                 ID quyền hạn: <span className="text-danger">*</span>
                             </label>
@@ -198,7 +200,25 @@ const SubFunctionEdit = () => {
                                 <span className="form-message-error">{errors.id?.message}</span>
                             )}
                         </Col>
+                        <Col>
+                            <label htmlFor="code">
+                                Mã quyền hạn: <span className="text-danger">*</span>
+                            </label>
 
+                            {/* Thường edit không cho sửa ID */}
+                            <input
+                                {...register("code", {
+                                    required: { value: true, message: "Mã quyền hạn không được để trống." },
+                                })}
+                                type="text"
+                                id="code"
+                                className="form-control form-control-sm"
+                                placeholder="Ví dụ: VIEW_FUNCTION"
+                            />
+                            {errors.code && (
+                                <span className="form-message-error">{errors.code?.message}</span>
+                            )}
+                        </Col>
                         <Col>
                             <label htmlFor="NAME">
                                 Tên quyền hạn: <span className="text-danger">*</span>

@@ -114,14 +114,14 @@ const SubFunctionDetail = () => {
 
               <Row>
                 <Col>
-                  <label htmlFor="ID">
-                    ID quyền hạn: <span className="text-danger">*</span>
+                  <label htmlFor="code">
+                    Mã quyền hạn: <span className="text-danger">*</span>
                   </label>
                   <input
-                    value={item?.id ?? ""}
+                    value={item?.code ?? ""}
                     disabled
                     type="text"
-                    id="ID"
+                    id="code"
                     className="form-control form-control-sm"
                   />
                 </Col>

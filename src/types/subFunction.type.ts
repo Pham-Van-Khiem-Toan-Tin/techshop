@@ -13,6 +13,17 @@ export interface SubFunctionEditForm {
     functionId?: string | null
 }
 
+export interface SubFunction {
+    id: string,
+    code: string,
+    name: string,
+    description: string,
+    function?: {
+        id: string,
+        code: string;
+        name: string
+    }
+}
 export interface SubFunctionForm {
     id: string,
     code: string,

@@ -7,7 +7,7 @@ import { toast } from "react-toastify"
 import type { FunctionOption } from "../../types/function.type"
 import Select from 'react-select';
 import { useCreateSubFunctionMutation } from "../../features/subfunction/subfunction.api"
-import type { SubFunctionForm } from "../../types/subFunction.type"
+import type { SubFunctionCreateForm } from "../../types/subFunction.type"
 import { useEffect } from "react"
 type Option = {
     label: string,
@@ -17,7 +17,7 @@ type Option = {
 
 const SubFunctionCreate = () => {
     const navigate = useNavigate()
-    const { register, formState: { errors }, handleSubmit, control } = useForm<SubFunctionForm>({
+    const { register, formState: { errors }, handleSubmit, control } = useForm<SubFunctionCreateForm>({
         defaultValues: { functionId: null }
     })
     const {
@@ -29,7 +29,7 @@ const SubFunctionCreate = () => {
     const [createSubFunction, { isLoading: isCreating }] = useCreateSubFunctionMutation()
 
 
-    const onSubmit: SubmitHandler<SubFunctionForm> = async (data: SubFunctionForm) => {
+    const onSubmit: SubmitHandler<SubFunctionCreateForm> = async (data: SubFunctionCreateForm) => {
         try {
             const res = await createSubFunction(data).unwrap()
             toast.success(res.message)
@@ -64,7 +64,7 @@ const SubFunctionCreate = () => {
                 </div>
                 <form id="subfunction-form" onSubmit={handleSubmit(onSubmit)} className="py-3 px-4 form-app mb-5">
                     <div className="mb-5">
-                        <div>Chức năng:</div>
+                        <div className="fw-bold">Chức năng:</div>
                         <div className="f-body-3xs mb-2">Quyền này thuộc về mô-đun hệ thống nào?</div>
                         <Controller
                             name="functionId"
@@ -95,23 +95,23 @@ const SubFunctionCreate = () => {
                     </div>
                     <Row>
                         <Col>
-                            <label htmlFor="ID">ID quyền hạn: <span className="text-danger">*</span></label>
-                            <input {...register("id", {
+                            <label htmlFor="code">Mã quyền hạn: <span className="text-danger">*</span></label>
+                            <input {...register("code", {
                                 required: {
                                     value: true,
-                                    message: "Id không được để trống."
+                                    message: "Mã quyền hạn không được để trống."
                                 }
-                            })} disabled={isCreating} type="text" id='ID' className='form-control form-control-sm' placeholder='Ví dụ: VIEW_FUNCTION' />
-                            {errors.id && <span className='form-message-error'>{errors.id?.message}</span>}
+                            })} disabled={isCreating} type="text" id='code' className='form-control form-control-sm' placeholder='Ví dụ: VIEW_FUNCTION' />
+                            {errors.code && <span className='form-message-error'>{errors.code?.message}</span>}
                         </Col>
                         <Col>
-                            <label htmlFor="ID">Tên quyền hạn: <span className="text-danger">*</span></label>
+                            <label htmlFor="name">Tên quyền hạn: <span className="text-danger">*</span></label>
                             <input {...register("name", {
                                 required: {
                                     value: true,
                                     message: "Tên không được để trống."
                                 }
-                            })} disabled={isCreating} type="text" id='ID' className='form-control form-control-sm' placeholder='Ví dụ: Xem chi tiết' />
+                            })} disabled={isCreating} type="text" id='name' className='form-control form-control-sm' placeholder='Ví dụ: Xem chi tiết' />
                             {errors.name && <span className='form-message-error'>{errors.name?.message}</span>}
                         </Col>
                     </Row>

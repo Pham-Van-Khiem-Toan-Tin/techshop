@@ -8,7 +8,6 @@ import {
     parseAsNativeArrayOf,
 } from "nuqs";
 import { useDeleteSubFunctionMutation, useGetSubFunctionsQuery } from "../../features/subfunction/subfunction.api";
-import type { SubFunction } from "../../types/function.type";
 import type { Column } from "../../types/table.type";
 import Pagination from "../../components/common/Pagination";
 import DataTable from "../../components/common/DataTable";
@@ -18,6 +17,7 @@ import { SortIndicator } from "../../components/common/SortIndicator ";
 import type { Page } from "../../types/page.type";
 import { Modal } from "react-bootstrap";
 import { toast } from "react-toastify";
+import type { SubFunction } from "../../types/subFunction.type";
 
 const SIZE_OPTIONS = [10, 25, 50, 100] as const;
 const DEFAULT_SIZE = 10;
@@ -28,13 +28,13 @@ const normalizeSize = (raw: number) =>
 type Option = { value: string; label: string };
 
 const FIELD_OPTIONS: Option[] = [
-    { value: "id", label: "ID" },
+    { value: "code", label: "Mã quyền hạn" },
     { value: "name", label: "Tên" },
 ];
 
 const SORT_OPTIONS: Option[] = [
-    { value: "id:asc", label: "ID A→Z" },
-    { value: "id:desc", label: "ID Z→A" },
+    { value: "code:asc", label: "Mã A→Z" },
+    { value: "code:desc", label: "Mã Z→A" },
     { value: "name:asc", label: "Tên A→Z" },
     { value: "name:desc", label: "Tên Z→A" },
 ];
@@ -46,7 +46,7 @@ export default function SubFunctionManagement() {
         size: parseAsInteger.withDefault(DEFAULT_SIZE),
         q: parseAsString.withDefault(""),
         field: parseAsNativeArrayOf(parseAsString).withDefault([]),
-        sort: parseAsString.withDefault("id:asc"),
+        sort: parseAsString.withDefault("code:asc"),
     });
 
     // normalize page/size từ URL
@@ -106,7 +106,7 @@ export default function SubFunctionManagement() {
 
     const columns = useMemo<Column<SubFunction>[]>(
         () => [
-            { key: "id", title: "ID", strong: true, render: (r) => r.id },
+            { key: "code", title: "Mã quyền hạn", strong: true, render: (r) => r.code },
             { key: "name", title: "Tên", muted: true, render: (r) => r.name },
             {
                 key: "description",
@@ -115,10 +115,10 @@ export default function SubFunctionManagement() {
                 render: (r) => r.description,
             },
             {
-                key: "sortOrder",
-                title: "Quyền hạn chính",
+                key: "function",
+                title: "Chức năng",
                 muted: true,
-                render: (r) => r.sortOrder,
+                render: (r) => r?.function?.name ?? "Chưa phân loại",
             },
         ],
         []
@@ -161,7 +161,7 @@ export default function SubFunctionManagement() {
         try {
             await deleteSubFunction(deleteTarget.id).unwrap();
 
-            toast.success(`Đã xoá "${deleteTarget.id}"`);
+            toast.success(`Đã xoá "${deleteTarget.code}"`);
             closeDelete();
         } catch (e: any) {
             toast.error(e?.data?.message ?? "Có lỗi xảy ra");

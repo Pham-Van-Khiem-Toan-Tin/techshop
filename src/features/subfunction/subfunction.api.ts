@@ -1,9 +1,8 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQuery } from "../../lib/baseQuery";
 import type { Page } from "../../types/page.type";
-import type { SubFunction } from "../../types/function.type";
 import type { ApiResponse } from "../../types/api.type";
-import type { SubFunctionCreateForm, SubFunctionEditForm, SubFunctionForm } from "../../types/subFunction.type";
+import type { SubFunctionCreateForm, SubFunctionEditForm, SubFunction } from "../../types/subFunction.type";
 type UpdateArg = { id: string; body: SubFunctionEditForm };
 type SubFunctionSearch = {
   keyword: string;
@@ -48,7 +47,7 @@ export const subFunctionApi = createApi({
       }),
       invalidatesTags: [{type: "SubFunctionOptions", id: "LIST"}],
     }),
-    getSubFunctionById: builder.query<SubFunctionForm, string>({
+    getSubFunctionById: builder.query<SubFunction, string>({
       query: (id) => ({
         url: `/auth/subfunctions/${id}`,
       }),
