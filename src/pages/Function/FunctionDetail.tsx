@@ -134,7 +134,7 @@ const FunctionDetail = () => {
                       <td className="col-tt">
                         <span className="ps-2 d-inline-block">{index + 1}</span>
                       </td>
-                      <td className="fw-600">{sl.id}</td>
+                      <td className="fw-600">{sl.code}</td>
                       <td className="text-muted">{sl.name}</td>
                       <td className="text-muted">{sl.description}</td>
                     </tr>

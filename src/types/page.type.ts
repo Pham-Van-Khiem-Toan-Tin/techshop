@@ -1,9 +1,8 @@
 export type Page<T> = {
   content: T[];
-  page: {
-    totalElements: number;
-    totalPages: number;
-    number: number; // page index (0-based)
-    size: number;
-  }
+  pageable: {
+    pageNumber: number; // page index (0-based)
+    pageSize: number;
+  },
+  total: number
 };

@@ -95,7 +95,7 @@ export default function SubFunctionManagement() {
     const rows: SubFunction[] = data?.content ?? [];
     const totalPages = Math.max(
         1,
-        Math.ceil(((data as Page<SubFunction>)?.page?.totalElements ?? 0) / size)
+        Math.ceil(((data as Page<SubFunction>)?.total ?? 0) / size)
     );
 
     // nếu user sửa URL page quá lớn → đẩy về trang cuối
@@ -275,7 +275,7 @@ export default function SubFunctionManagement() {
                     totalPages={totalPages}
                     onChange={(nextUiPage) => setQuery({ page: nextUiPage })}
                     variant="basic"
-                    totalElement={data?.page.totalElements}
+                    totalElement={data?.total}
                     showRowsPerPage
                     rowsPerPage={size}
                     rowsPerPageOptions={[...SIZE_OPTIONS]}

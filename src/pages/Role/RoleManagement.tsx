@@ -85,7 +85,7 @@ const RoleManagement = () => {
   const rows: Role[] = data?.content ?? [];
   const totalPages = Math.max(
     1,
-    Math.ceil(((data as Page<Role>)?.page?.totalElements ?? 0) / size)
+    Math.ceil(((data as Page<Role>)?.total ?? 0) / size)
   );
 
   // nếu URL page vượt quá totalPages (sau khi có data) thì sửa URL về trang cuối
@@ -96,7 +96,7 @@ const RoleManagement = () => {
 
   const columns = useMemo<Column<Role>[]>(() =>
     [
-      { key: "code", title: "ID", strong: true, render: (r) => r.code },
+      { key: "code", title: "Mã vai trò", strong: true, render: (r) => r.code },
       { key: "name", title: "Tên", muted: true, render: (r) => r.name },
       { key: "description", title: "Mô tả", muted: true, render: (r) => r.description },
       { key: "quantityPermission", title: "Số lượng quyền hạn", muted: true, render: (r) => r.quantityPermission },
@@ -254,7 +254,7 @@ const RoleManagement = () => {
         <Pagination
           page={uiPage}
           totalPages={totalPages}
-          totalElement={data?.page.totalElements}
+          totalElement={data?.total}
           onChange={(nextUiPage) => setQuery({ page: nextUiPage })}
           variant="basic"
           showRowsPerPage

@@ -23,7 +23,6 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import RoleManagement from "./pages/Role/RoleManagement";
 import Product from "./pages/Product/Product";
 import Order from "./pages/Order/Order";
-import Category from "./pages/Category/Category";
 import Login from "./pages/Login/Login";
 import AppBootstrap from "./AppBootstrap";
 import ProtectedRoute from "./auth/ProtectedRoute";
@@ -40,6 +39,9 @@ import FunctionEdit from "./pages/Function/FunctionEdit";
 import FunctionDetail from "./pages/Function/FunctionDetail";
 import RoleEdit from "./pages/Role/RoleEdit";
 import RoleDetail from "./pages/Role/RoleDetail";
+import CategoryManagement from "./pages/Category/CategoryManagement";
+import CategoryCreate from "./pages/Category/CategoryCreate";
+import CategoryDetail from "./pages/Category/CategoryDetail";
 
 const router = createBrowserRouter([
   {
@@ -79,7 +81,10 @@ const router = createBrowserRouter([
           { path: "subfunctions/create", element: <SubFunctionCreate /> },
           { path: "products", element: <Product /> },
           { path: "orders", element: <Order /> },
-          { path: "categories", element: <Category /> }
+          { path: "categories", element: <CategoryManagement /> },
+          { path: "categories/create", element: <CategoryCreate /> },
+          { path: "categories/view/:id", element: <CategoryDetail /> }
+
         ]
       }
     ],

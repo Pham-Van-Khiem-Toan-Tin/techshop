@@ -32,6 +32,9 @@ import {
     RiStackLine,
     RiShape2Line,
 
+    RiSmartphoneLine,
+    RiAppleLine,
+    RiAndroidLine
 } from "react-icons/ri"
 export type IconOption = {
     value: string
@@ -78,4 +81,10 @@ export const optionIcons: IconOption[] = [
     // ===== INFRA =====
     { value: "RiDatabase2Line", label: "Database", Icon: RiDatabase2Line },
     { value: "RiCloudLine", label: "Cloud", Icon: RiCloudLine },
+
+    // category
+    { value: "RiSmartphoneLine", label: "Điện thoại", Icon: RiSmartphoneLine },
+    { value: "RiAppleLine", label: "Apple", Icon: RiAppleLine },
+    { value: "RiAndroidLine", label: "Android", Icon: RiAndroidLine },
+
 ]

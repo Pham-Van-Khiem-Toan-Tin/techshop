@@ -26,7 +26,7 @@ export const fetchMe = createAsyncThunk<User>(
       // 401 => chưa login
       const is_login_success = localStorage.getItem("is_login_success")
       if (is_login_success != null && JSON.parse(is_login_success)) {
-        window.location.href = "http://localhost:8082/auth/oauth2/authorization/admin-idp";
+        window.location.href = "http://localhost:8088/oauth2/authorization/admin-idp";
       }
       console.log(e);
       localStorage.setItem("is_login_success","false");
