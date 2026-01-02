@@ -21,9 +21,6 @@ import type { SubFunctionCreateForm, SubFunctionEditForm } from "../../types/sub
 import { Modal } from "react-bootstrap"
 import { toast } from "react-toastify"
 
-// ⚠️ bạn cần có 2 hook này trong function.api
-// - useGetFunctionByIdQuery (hoặc mutation) để fetch detail
-// - useUpdateFunctionMutation để update
 import {
   useGetFunctionByIdQuery,
   useUpdateFunctionMutation,

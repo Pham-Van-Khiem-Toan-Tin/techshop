@@ -45,7 +45,7 @@ export const categoryApi = createApi({
         url: `/api/admin/catalog/categories/${id}`,
       }),
       providesTags: (result, error, id) => [{ type: "Category", id }],
-      keepUnusedDataFor: 30,
+      keepUnusedDataFor: 0,
     }),
     getCategoryOption: builder.query<CategoryOption[], null>({
       query: () => ({
@@ -77,7 +77,7 @@ export const categoryApi = createApi({
     >({
       query: ({ id, body }) => ({
         url: `/api/admin/catalog/categories/${id}`,
-        method: "POST",
+        method: "PUT",
         body,
       }),
       invalidatesTags: [{ type: "Categories", id: "LIST" }],

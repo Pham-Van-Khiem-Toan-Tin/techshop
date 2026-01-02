@@ -4,6 +4,7 @@ import { rolesApi } from "../features/roles/role.api";
 import { functionApi } from "../features/functions/function.api";
 import { subFunctionApi } from "../features/subfunction/subfunction.api";
 import { categoryApi } from "../features/category/category.api";
+import { attributeApi } from "../features/attribute/attribute.api";
 
 export const store = configureStore({
   reducer: {
@@ -11,14 +12,16 @@ export const store = configureStore({
     [rolesApi.reducerPath]: rolesApi.reducer,
     [functionApi.reducerPath]: functionApi.reducer,
     [subFunctionApi.reducerPath]: subFunctionApi.reducer,
-    [categoryApi.reducerPath]: categoryApi.reducer
+    [categoryApi.reducerPath]: categoryApi.reducer,
+    [attributeApi.reducerPath]: attributeApi.reducer,
   },
   middleware: (gDf) =>
     gDf().concat(
       rolesApi.middleware,
       functionApi.middleware,
       subFunctionApi.middleware,
-      categoryApi.middleware
+      categoryApi.middleware,
+      attributeApi.middleware
     ),
 });
 

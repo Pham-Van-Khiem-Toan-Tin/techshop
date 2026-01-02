@@ -42,6 +42,11 @@ import RoleDetail from "./pages/Role/RoleDetail";
 import CategoryManagement from "./pages/Category/CategoryManagement";
 import CategoryCreate from "./pages/Category/CategoryCreate";
 import CategoryDetail from "./pages/Category/CategoryDetail";
+import CategoryEdit from "./pages/Category/CategoryEdit";
+import AttributeManagement from "./pages/Attribute/AttributeManagement";
+import AttributeCreate from "./pages/Attribute/AttributeCreate";
+import AttributeEdit from "./pages/Attribute/AttributeEdit";
+import AttributeDetail from "./pages/Attribute/AttributeDetail";
 
 const router = createBrowserRouter([
   {
@@ -83,8 +88,12 @@ const router = createBrowserRouter([
           { path: "orders", element: <Order /> },
           { path: "categories", element: <CategoryManagement /> },
           { path: "categories/create", element: <CategoryCreate /> },
-          { path: "categories/view/:id", element: <CategoryDetail /> }
-
+          { path: "categories/view/:id", element: <CategoryDetail /> },
+          { path: "categories/edit/:id", element: <CategoryEdit /> },
+          { path: "attributes", element: <AttributeManagement /> },
+          {path: "attributes/create", element: <AttributeCreate />},
+          {path: "attributes/edit/:id", element: <AttributeEdit />},
+          {path: "attributes/view/:id", element: <AttributeDetail />}
         ]
       }
     ],

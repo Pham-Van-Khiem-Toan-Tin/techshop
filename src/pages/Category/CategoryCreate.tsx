@@ -134,7 +134,7 @@ const CategoryCreate = () => {
       <div className="d-flex align-items-center justify-content-between border-bottom px-4 pb-4">
         <div>
           <div className="fw-bold fs-6">Tạo danh mục mới</div>
-          <div className="f-caption">Tạo danh mục và upload ảnh lên Cloudinary.</div>
+          <div className="f-caption">Cấu hình danh mục sản phẩm.</div>
         </div>
 
         <div className="d-flex align-items-center gap-3">

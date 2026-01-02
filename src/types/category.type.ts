@@ -10,6 +10,7 @@ export interface CategoryDetail {
     id: string,
     name: string,
     parentName: string;
+    parentId: string;
     isVisible: boolean,
     sortOrder: number,
     menuLabel: string,
@@ -28,11 +29,10 @@ export interface CategoryOption {
 
 export interface CategoryCreateFormUI {
     name: string,
+    slug: string,
     parentId: string,
-    isVisible: boolean,
-    sortOrder: number,
-    menuLabel: string,
-    iconUrl: string,
+    active: boolean,
+    icon: string,
     imageFile: File | null,
     isFeatured: boolean
 }
@@ -45,7 +45,6 @@ export interface CategoryUpdateForm {
     sortOrder: number,
     menuLabel: string,
     iconUrl: string,
-    imageUrl: string,
-    menuGroup: string,
+    imageFile: File | null,
     isFeatured: boolean
 }

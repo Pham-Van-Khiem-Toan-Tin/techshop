@@ -33,6 +33,9 @@ const Sidebar = () => {
         <NavLink to="/products" className={linkClass}>
           Quản lí sản phẩm
         </NavLink>
+        <NavLink to="/attributes" className={linkClass}>
+          Quản lí thuộc tính
+        </NavLink>
         <NavLink to="/orders" className={linkClass}>
           Quản lí đơn hàng
         </NavLink>

@@ -1,3 +1,4 @@
+import { BsTags } from "react-icons/bs"
 import {
     RiDashboardLine,
     RiUserLine,
@@ -36,6 +37,7 @@ import {
     RiAppleLine,
     RiAndroidLine
 } from "react-icons/ri"
+import { SiOppo, SiSamsung, SiXiaomi } from "react-icons/si"
 export type IconOption = {
     value: string
     label: string
@@ -86,5 +88,11 @@ export const optionIcons: IconOption[] = [
     { value: "RiSmartphoneLine", label: "Điện thoại", Icon: RiSmartphoneLine },
     { value: "RiAppleLine", label: "Apple", Icon: RiAppleLine },
     { value: "RiAndroidLine", label: "Android", Icon: RiAndroidLine },
+    { value: "SiSamsung", label: "Samsung", Icon: SiSamsung },
+    { value: "SiOppo", label: "Oppo", Icon: SiOppo },
+    { value: "SiXiaomi", label: "Xiaomi", Icon: SiXiaomi },
+    { value: "BsTags", label: "Thuộc tính", Icon: BsTags },
+
+
 
 ]
