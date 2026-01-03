@@ -118,7 +118,7 @@ const CategoryManagement = () => {
         key: "isVisible",
         title: "Hiển thị",
         muted: true,
-        render: (c) => (c.isVisible ? "Có" : "Không"),
+        render: (c) => (c.active ? "Có" : "Không"),
       },
     ],
     []

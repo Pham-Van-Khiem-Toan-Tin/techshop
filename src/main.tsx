@@ -47,6 +47,10 @@ import AttributeManagement from "./pages/Attribute/AttributeManagement";
 import AttributeCreate from "./pages/Attribute/AttributeCreate";
 import AttributeEdit from "./pages/Attribute/AttributeEdit";
 import AttributeDetail from "./pages/Attribute/AttributeDetail";
+import BrandManagement from "./pages/Brand/BrandManagement";
+import BrandCreate from "./pages/Brand/BrandCreate";
+import BrandEdit from "./pages/Brand/BrandEdit";
+import BrandDetail from "./pages/Brand/BrandDetail";
 
 const router = createBrowserRouter([
   {
@@ -93,7 +97,12 @@ const router = createBrowserRouter([
           { path: "attributes", element: <AttributeManagement /> },
           {path: "attributes/create", element: <AttributeCreate />},
           {path: "attributes/edit/:id", element: <AttributeEdit />},
-          {path: "attributes/view/:id", element: <AttributeDetail />}
+          {path: "attributes/view/:id", element: <AttributeDetail />},
+
+          { path: "brands", element: <BrandManagement /> },
+          {path: "brands/create", element: <BrandCreate />},
+          {path: "brands/edit/:id", element: <BrandEdit />},
+          {path: "brands/view/:id", element: <BrandDetail />}
         ]
       }
     ],

@@ -52,7 +52,6 @@ const AttributeCreate = () => {
             .filter(x => x.value !== "" && x.label !== "");
     const onSubmit: SubmitHandler<AttributeCreateForm> = async (data: AttributeCreateForm) => {
         try {
-            console.log(data);
             const isSelect = data.dataType === "SELECT" || data.dataType === "MULTI_SELECT";
             const cleanedOptions = isSelect ? normalizeOptions(data.options) : [];
             if (isSelect && cleanedOptions.length === 0) {

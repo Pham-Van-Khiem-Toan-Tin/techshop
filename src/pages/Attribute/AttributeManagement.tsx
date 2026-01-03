@@ -41,7 +41,7 @@ const AttributeManagement = () => {
     size: parseAsInteger.withDefault(DEFAULT_SIZE),
     q: parseAsString.withDefault(""),
     field: parseAsNativeArrayOf(parseAsString).withDefault([]),
-    sort: parseAsString.withDefault("id:asc"),
+    sort: parseAsString.withDefault("code:asc"),
   });
 
   // normalize page/size từ URL

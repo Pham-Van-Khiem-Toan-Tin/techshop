@@ -5,6 +5,7 @@ import {
   type Attribute,
   type AttributeDetail,
   type AttributeEditForm,
+  type AttributeOptionForm,
 } from "../../types/attribute.type";
 import { baseQuery } from "../../lib/baseQuery";
 import type { ApiResponse } from "../../types/api.type";
@@ -12,7 +13,7 @@ import type { ApiResponse } from "../../types/api.type";
 export const attributeApi = createApi({
   reducerPath: "attributeApi",
   baseQuery,
-  tagTypes: ["Attributes", "Attribute"],
+  tagTypes: ["Attributes", "Attribute", "Attribute_Options"],
   endpoints: (builder) => ({
     getAttributes: builder.query<
       Page<Attribute>,
@@ -46,6 +47,14 @@ export const attributeApi = createApi({
       }),
       providesTags: (result, error, id) => [{ type: "Attribute", id }],
       keepUnusedDataFor: 0,
+    }),
+    getAttributeOptions: builder.mutation<AttributeDetail[], AttributeOptionForm>({
+      query: (body) => ({
+        url: "/api/admin/catalog/attributes/options",
+        method: "POST",
+        body
+      }),
+      invalidatesTags: [{type: "Attribute_Options", id: "LIST"}]
     }),
     createAttribute: builder.mutation<ApiResponse, AttributeCreateForm>({
       query: (body) => ({
@@ -82,4 +91,5 @@ export const {
   useCreateAttributeMutation,
   useDeleteAttributeMutation,
   useGetAttributeByIdQuery,
+  useGetAttributeOptionsMutation
 } = attributeApi;

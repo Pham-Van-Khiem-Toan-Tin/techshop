@@ -7,6 +7,11 @@ export interface Attribute {
     dataType: string;
 }
 
+export interface AttributeOptionForm {
+    attributeIds: string[],
+    keyword: string
+}
+
 export interface AttributeDetail {
     id: string;
     code: string;

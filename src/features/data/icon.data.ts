@@ -1,3 +1,4 @@
+import { AiOutlineLaptop } from "react-icons/ai"
 import { BsTags } from "react-icons/bs"
 import {
     RiDashboardLine,
@@ -38,6 +39,7 @@ import {
     RiAndroidLine
 } from "react-icons/ri"
 import { SiOppo, SiSamsung, SiXiaomi } from "react-icons/si"
+import { TfiMedall } from "react-icons/tfi"
 export type IconOption = {
     value: string
     label: string
@@ -92,6 +94,8 @@ export const optionIcons: IconOption[] = [
     { value: "SiOppo", label: "Oppo", Icon: SiOppo },
     { value: "SiXiaomi", label: "Xiaomi", Icon: SiXiaomi },
     { value: "BsTags", label: "Thuộc tính", Icon: BsTags },
+    { value: "AiOutlineLaptop", label: "Máy tính xách tay", Icon: AiOutlineLaptop },
+    {value: "TfiMedall", label: "Thương hiệu", Icon: TfiMedall}
 
 
 

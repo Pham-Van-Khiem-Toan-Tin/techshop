@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import Select, { components } from "react-select";
-import { Controller, useForm, type SubmitHandler } from "react-hook-form";
+import { Controller, FormProvider, useFieldArray, useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "react-toastify";
 import { RiSaveLine } from "react-icons/ri";
 
@@ -10,455 +10,631 @@ import type { IconOption } from "../../features/data/icon.data";
 import { Control, SingleValue } from "../../configs/select.config";
 import { selectStyles } from "../../features/data/select.data";
 
-import type { CategoryOption, CategoryUpdateForm } from "../../types/category.type";
+import type { AttributeConfigUI, CategoryDetail, CategoryEditFormUI, CategoryOption, CategoryUpdateForm } from "../../types/category.type";
+
 import {
-    useGetCategoryOptionQuery,
-    useGetCategoryByIdQuery,
-    useUpdateCategoryMutation,
+  useGetCategoryByIdQuery,
+  useGetCategoryOptionQuery,
+  useLazyGetCategoryByIdQuery,
+  useUpdateCategoryMutation,
 } from "../../features/category/category.api";
 
-type ParentSelectOption = {
-    value: string;
-    label: string;
-};
+import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
+import "react-tabs/style/react-tabs.css";
+import { RxDashboard } from "react-icons/rx";
+import { CiSettings } from "react-icons/ci";
+
+import { useGetAttributeOptionsMutation } from "../../features/attribute/attribute.api";
+import { useDebounce } from "../../hooks/useDebounce";
+
+import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import SortableAttributeItem from "./SortableAttributeItem";
+
+import { Modal } from "react-bootstrap";
+import UploadImageBox from "../../components/common/UploadImageBox";
+
+type ParentSelectOption = { value: string; label: string };
 
 const CategoryEdit = () => {
-    const navigate = useNavigate();
-    const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
 
-    const {
-        register,
-        handleSubmit,
-        control,
-        setValue,
-        clearErrors,
-        reset,
-        formState: { errors },
-    } = useForm<CategoryUpdateForm>({
-        defaultValues: {
-            id: "",
-            name: "",
-            parentId: "",
-            isVisible: true,
-            sortOrder: 10,
-            menuLabel: "",
-            iconUrl: "",
-            imageFile: null,
-            isFeatured: false,
-        },
-    });
+  const methods = useForm<CategoryEditFormUI>({
+    defaultValues: {
+      name: "",
+      slug: "",
+      parentId: "",
+      active: true,
+      icon: "",
+      imageFile: null, // chỉ dùng khi chọn ảnh mới
+      attributeConfigs: [],
+    },
+    shouldUnregister: false,
+  });
 
-    const [imagePreview, setImagePreview] = useState<string>("");
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    setError,
+    getValues,
+    reset,
+    formState: { errors },
+  } = methods;
 
-    // ✅ fetch parent options
-    const {
-        data: parentData,
-        isLoading: isParentLoading,
-        isFetching: isParentFetching,
-    } = useGetCategoryOptionQuery(null);
+  const { fields, move, remove, append } = useFieldArray({
+    control,
+    name: "attributeConfigs",
+    keyName: "rhfKey",
+  });
 
-    const parentOptions = useMemo<ParentSelectOption[]>(() => {
-        const arr = (parentData ?? []) as CategoryOption[];
-        return arr.map((x) => ({
-            value: x.id,
-            label: `${x.name} (Lv ${x.level})`,
-        }));
-    }, [parentData]);
+  // ===== Load detail =====
+  const { data: detail, isLoading: isDetailLoading, isFetching: isDetailFetching } = useGetCategoryByIdQuery(
+    id ?? "",
+    { skip: !id }
+  );
 
-    // ✅ react-select option render for icons
-    const IconOptionRender = (props: any) => {
-        const data = props.data as IconOption;
-        const IconComp = data?.Icon;
+  // ===== Parent options =====
+  const { data: parentData, isLoading: isParentLoading, isFetching: isParentFetching } = useGetCategoryOptionQuery(
+    null
+  );
 
-        return (
-            <components.Option {...props}>
-                <div className="d-flex align-items-center gap-2">
-                    {IconComp ? <IconComp size={16} /> : <span style={{ width: 16 }} />}
-                    <span>{data?.label ?? ""}</span>
-                </div>
-            </components.Option>
-        );
-    };
+  const parentOptions = useMemo<ParentSelectOption[]>(() => {
+    const arr = (parentData ?? []) as CategoryOption[];
+    return arr.map((x) => ({
+      value: x.id,
+      label: `${x.name} (Lv ${x.level})`,
+    }));
+  }, [parentData]);
 
-    const BOOL_OPTIONS = useMemo(
-        () => [
-            { value: true, label: "Có" },
-            { value: false, label: "Không" },
-        ],
-        []
-    );
-
-    // ✅ fetch category detail
-    const {
-        data: detail,
-        isLoading: isDetailLoading,
-        isFetching: isDetailFetching,
-        error: detailError,
-    } = useGetCategoryByIdQuery(id!, { skip: !id });
-
-    // ✅ update mutation
-    const [updateCategory, { isLoading: isUpdating }] = useUpdateCategoryMutation();
-
-    const currentImageUrl = useMemo(() => {
-        if (!detail) return "";
-        const c = (detail as any)?.data ?? detail;
-        return c?.imageUrl || c?.image || ""; // đổi field theo API của bạn
-    }, [detail]);
-
-    useEffect(() => {
-        if (!detail) return;
-        reset({
-            name: detail?.name ?? "",
-            parentId: detail?.parentId ?? "",
-            isVisible: detail?.isVisible,
-            sortOrder: Number(detail?.sortOrder ?? 10),
-            menuLabel: detail?.menuLabel ?? "",
-            iconUrl: detail?.iconUrl ?? "",
-            imageFile: null,
-            isFeatured: Boolean(detail?.isFeatured),
-        });
-    }, [detail, reset]);
-
-
-    // ✅ prevent memory leak from URL.createObjectURL
-    useEffect(() => {
-        return () => {
-            // chỉ revoke nếu là blob url
-            if (imagePreview?.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
-        };
-    }, [imagePreview]);
-
-    const onSubmit: SubmitHandler<CategoryUpdateForm> = async (data) => {
-        if (!id) return;
-
-        try {
-            // ✅ update: KHÔNG bắt buộc phải chọn ảnh mới
-            // nhưng nếu muốn bắt chọn khi category chưa có ảnh -> bạn tự kiểm tra detail.imageUrl
-
-            const fd = new FormData();
-            fd.append("name", data.name.trim());
-            fd.append("parentId", data.parentId || "");
-            fd.append("isVisible", String(data.isVisible));
-            fd.append("sortOrder", String(Number(data.sortOrder) || 0));
-            fd.append("menuLabel", data.menuLabel.trim());
-            fd.append("iconUrl", data.iconUrl.trim());
-            fd.append("isFeatured", String(data.isFeatured));
-
-            // ✅ MultipartFile (optional)
-            if (data.imageFile) fd.append("image", data.imageFile);
-
-            const res = await updateCategory({ id, body: fd } as any).unwrap();
-            toast.success(res?.message ?? "Cập nhật danh mục thành công");
-
-            setTimeout(() => navigate("/categories", { replace: true }), 1200);
-        } catch (e: any) {
-            toast.error(e?.data?.message ?? "Có lỗi xảy ra");
-        }
-    };
-
-    const isBusy = isUpdating || isDetailLoading || isDetailFetching;
+  // icon option render
+  const IconOptionRender = (props: any) => {
+    const data = props.data as IconOption;
+    const IconComp = data?.Icon;
 
     return (
-        <div className="border-app--rounded bg-white m-4 py-4 position-relative">
-            {/* Header */}
-            <div className="d-flex align-items-center justify-content-between border-bottom px-4 pb-4">
-                <div>
-                    <div className="fw-bold fs-6">Cập nhật danh mục</div>
-                    <div className="f-caption">Chỉnh sửa danh mục và (tuỳ chọn) upload ảnh mới lên Cloudinary.</div>
-                </div>
+      <components.Option {...props}>
+        <div className="d-flex align-items-center gap-2">
+          {IconComp ? <IconComp size={16} /> : <span style={{ width: 16 }} />}
+          <span>{data?.label ?? ""}</span>
+        </div>
+      </components.Option>
+    );
+  };
 
-                <div className="d-flex align-items-center gap-3">
-                    <button
-                        className="btn-app btn-app--ghost btn-app--sm"
-                        onClick={() => navigate(-1)}
-                        disabled={isBusy}
-                        type="button"
-                    >
-                        Hủy
-                    </button>
+  const BOOL_OPTIONS = useMemo(
+    () => [
+      { value: true, label: "Có" },
+      { value: false, label: "Không" },
+    ],
+    []
+  );
 
-                    <button
-                        type="submit"
-                        form="category-form"
-                        className="btn-app btn-app--sm d-flex align-items-center gap-2"
-                        disabled={isBusy}
-                    >
-                        <RiSaveLine />
-                        {isUpdating ? "Đang lưu..." : "Lưu thay đổi"}
-                    </button>
-                </div>
-            </div>
+  // ===== image preview (hiện ảnh hiện tại) =====
+  const [serverImageUrl, setServerImageUrl] = useState<string>("");
 
-            {/* Form */}
-            <form id="category-form" className="form-app px-4 pt-4" onSubmit={handleSubmit(onSubmit)}>
-                <fieldset disabled={isBusy} style={{ border: 0, padding: 0, margin: 0 }}>
-                    {/* error state */}
-                    {!!detailError && (
-                        <div className="alert alert-danger">
-                            Không tải được dữ liệu danh mục. Vui lòng thử lại.
-                        </div>
-                    )}
+  // ===== fill form from API =====
+  useEffect(() => {
+    if (!detail) return;
+    const d = detail as CategoryDetail;
 
-                    <div className="row gx-5 gy-4">
-                        {/* name */}
-                        <div className="col-12 col-md-6">
-                            <label className="form-label">
-                                Tên danh mục: <span className="text-danger">*</span>
-                            </label>
-                            <input
-                                className="form-control form-control-sm"
-                                placeholder="Ví dụ: Điện thoại"
-                                {...register("name", { required: "Tên không được để trống." })}
-                            />
-                            {errors.name && <span className="form-message-error">{errors.name.message}</span>}
-                        </div>
+    const imageUrl = d.image.imageUrl ?? "";
+    setServerImageUrl(imageUrl);
 
-                        {/* menuLabel */}
-                        <div className="col-12 col-md-6">
-                            <label className="form-label">
-                                Nhãn menu: <span className="text-danger">*</span>
-                            </label>
-                            <input
-                                className="form-control form-control-sm"
-                                placeholder="Ví dụ: Sản phẩm"
-                                {...register("menuLabel", { required: "Nhãn menu không được để trống." })}
-                            />
-                            {errors.menuLabel && (
-                                <span className="form-message-error">{errors.menuLabel.message}</span>
-                            )}
-                        </div>
 
-                        {/* parentId */}
-                        <div className="col-12 col-md-6">
-                            <label className="form-label">Danh mục cha</label>
-                            <Controller
-                                name="parentId"
-                                control={control}
-                                render={({ field }) => (
-                                    <Select
-                                        placeholder="Chọn danh mục cha (level 1–2)"
-                                        options={parentOptions}
-                                        value={parentOptions.find((o) => o.value === field.value) ?? null}
-                                        onChange={(opt) => field.onChange((opt as any)?.value ?? "")}
-                                        isClearable
-                                        isLoading={isParentLoading || isParentFetching}
-                                        isDisabled={isBusy}
-                                        components={{ Control, DropdownIndicator: null, IndicatorSeparator: null }}
-                                        styles={selectStyles}
-                                    />
-                                )}
-                            />
-                        </div>
+    reset(
+      {
+        id: d.id,
+        name: d.name ?? "",
+        slug: d.slug ?? "",
+        parentId: d.parentId ?? "",
+        active: d.active ?? true,
+        icon: d.icon ?? "",
+        imageFile: null,
+        attributeConfigs:
+          (d.attributeConfigs ?? []).map((at, idx: number) => ({
+            id: at.id,
+            isRequired: !!at.isRequired,
+            isFilterable: !!at.isFilterable,
+            displayOrder: at.displayOrder ?? idx + 1,
+            label: at.label,
+            code: at.code,
+            dataType: at.dataType,
+            unit: at.unit,
+            // map options
+            optionsValue: (at.optionsValue ?? at.options ?? []).map((op: any) => ({
+              value: op.value ?? op.id,
+              label: op.label ?? op.name,
+              active: !!op.active,
+            })),
+          })) ?? [],
+      },
+      { keepDirty: false }
+    );
+  }, [detail, reset]);
 
-                        {/* sortOrder */}
-                        <div className="col-12 col-md-6">
-                            <label className="form-label">
-                                Thứ tự sắp xếp: <span className="text-danger">*</span>
-                            </label>
-                            <Controller
-                                name="sortOrder"
-                                control={control}
-                                rules={{ required: "Vui lòng nhập thứ tự sắp xếp" }}
-                                render={({ field }) => (
-                                    <>
-                                        <input
-                                            className="form-control form-control-sm"
-                                            type="text"
-                                            inputMode="numeric"
-                                            value={String(field.value ?? "")}
-                                            onChange={(e) => {
-                                                let v = e.target.value.replace(/\D/g, "").replace(/^0+/, "").slice(0, 4);
-                                                field.onChange(v ? Number(v) : 0);
-                                            }}
-                                        />
-                                        {errors.sortOrder && (
-                                            <span className="form-message-error">{errors.sortOrder.message as any}</span>
-                                        )}
-                                    </>
-                                )}
-                            />
-                        </div>
+  // ===== attribute search (giống create) =====
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
+  const [options, setOptions] = useState<AttributeConfigUI[]>([]);
+  const [selected, setSelected] = useState<AttributeConfigUI | null>(null);
+  const [searchAttributeOptions, { isLoading: isAttributeLoading }] = useGetAttributeOptionsMutation();
 
-                        {/* iconUrl */}
-                        <div className="col-12 col-md-6">
-                            <label className="form-label">
-                                Biểu tượng: <span className="text-danger">*</span>
-                            </label>
+  useEffect(() => {
+    if (!debouncedSearch.trim()) return;
 
-                            <Controller
-                                name="iconUrl"
-                                control={control}
-                                rules={{ required: "Biểu tượng không được để trống" }}
-                                render={({ field }) => (
-                                    <>
-                                        <Select<IconOption, false>
-                                            value={optionIcons.find((o) => o.value === field.value) ?? null}
-                                            onChange={(opt) => field.onChange(opt?.value ?? "")}
-                                            // ✅ update: vẫn có thể filter như create, hoặc show full list
-                                            options={optionIcons.filter((o) => o.value !== field.value)}
-                                            isSearchable
-                                            isClearable
-                                            isDisabled={isBusy}
-                                            placeholder="Chọn biểu tượng"
-                                            components={{
-                                                Option: IconOptionRender,
-                                                SingleValue,
-                                                Control,
-                                                DropdownIndicator: null,
-                                                IndicatorSeparator: null,
-                                            }}
-                                            styles={{
-                                                ...selectStyles,
-                                                control: (base: any) => ({ ...base, minHeight: 34 }),
-                                                valueContainer: (base: any) => ({
-                                                    ...base,
-                                                    paddingTop: 0,
-                                                    paddingBottom: 0,
-                                                }),
-                                                indicatorsContainer: (base: any) => ({ ...base, height: 34 }),
-                                            }}
-                                        />
-                                        {errors.iconUrl && (
-                                            <span className="form-message-error">{errors.iconUrl.message}</span>
-                                        )}
-                                    </>
-                                )}
-                            />
-                        </div>
+    const run = async () => {
+      const res = await searchAttributeOptions({
+        keyword: debouncedSearch,
+        attributeIds: fields ? fields.map((sl) => sl.id) : [],
+      }).unwrap();
 
-                        {/* isVisible */}
-                        <div className="col-12 col-md-6">
-                            <label className="form-label">Hiển thị</label>
-                            <Controller
-                                name="isVisible"
-                                control={control}
-                                render={({ field }) => (
-                                    <Select
-                                        options={BOOL_OPTIONS}
-                                        value={BOOL_OPTIONS.find((x) => x.value === field.value) ?? BOOL_OPTIONS[0]}
-                                        onChange={(v) => field.onChange((v as any)?.value ?? true)}
-                                        isSearchable={false}
-                                        isDisabled={isBusy}
-                                        components={{ DropdownIndicator: null, IndicatorSeparator: null }}
-                                        styles={{
-                                            ...selectStyles,
-                                            control: (base: any) => ({ ...base, minHeight: 34 }),
-                                            valueContainer: (base: any) => ({
-                                                ...base,
-                                                paddingTop: 0,
-                                                paddingBottom: 0,
-                                            }),
-                                            indicatorsContainer: (base: any) => ({ ...base, height: 34 }),
-                                        }}
-                                    />
-                                )}
-                            />
-                        </div>
+      setOptions(
+        res.map((x) => ({
+          id: x.id,
+          isRequired: false,
+          isFilterable: false,
+          displayOrder: 0,
+          label: x.label,
+          code: x.code,
+          dataType: x.dataType,
+          unit: x.unit,
+          optionsValue: x.options.map((op) => ({ value: op.value, label: op.label, active: false })),
+        }))
+      );
+    };
 
-                        {/* isFeatured */}
-                        <div className="col-12 col-md-6">
-                            <label className="form-label">Nổi bật</label>
-                            <Controller
-                                name="isFeatured"
-                                control={control}
-                                render={({ field }) => (
-                                    <Select
-                                        options={BOOL_OPTIONS}
-                                        value={BOOL_OPTIONS.find((x) => x.value === field.value) ?? BOOL_OPTIONS[1]}
-                                        onChange={(v) => field.onChange((v as any)?.value ?? false)}
-                                        isSearchable={false}
-                                        isDisabled={isBusy}
-                                        components={{ DropdownIndicator: null, IndicatorSeparator: null }}
-                                        styles={{
-                                            ...selectStyles,
-                                            control: (base: any) => ({ ...base, minHeight: 34 }),
-                                            valueContainer: (base: any) => ({
-                                                ...base,
-                                                paddingTop: 0,
-                                                paddingBottom: 0,
-                                            }),
-                                            indicatorsContainer: (base: any) => ({ ...base, height: 34 }),
-                                        }}
-                                    />
-                                )}
-                            />
-                        </div>
+    run();
+  }, [debouncedSearch, fields, searchAttributeOptions]);
 
-                        {/* imageFile */}
-                        <div className="col-12 col-md-6">
-                            <label className="form-label">
-                                Ảnh danh mục: <span className="text-danger">*</span>
-                            </label>
+  const onSelect = (opt: AttributeConfigUI | null) => {
+    setSelected(null);
+    if (!opt) return;
 
-                            <input
-                                className="form-control form-control-sm"
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (!file) return;
+    const exists = fields.some((f) => f.id === opt.id);
+    if (exists) return;
 
-                                    clearErrors("imageFile");
-                                    setValue("imageFile", file, { shouldDirty: true, shouldValidate: true });
+    append({
+      id: opt.id,
+      isRequired: false,
+      isFilterable: false,
+      displayOrder: fields.length + 1,
+      label: opt.label,
+      code: opt.code,
+      dataType: opt.dataType,
+      unit: opt.unit,
+      optionsValue: opt.optionsValue,
+    });
+  };
 
-                                    if (imagePreview?.startsWith("blob:")) {
-                                        URL.revokeObjectURL(imagePreview);
-                                    }
-                                    setImagePreview(URL.createObjectURL(file));
-                                }}
-                            />
+  // ===== DnD (giống create) =====
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 0 },
+    })
+  );
 
-                            {errors.imageFile && (
-                                <span className="form-message-error">
-                                    {errors.imageFile.message as any}
-                                </span>
-                            )}
+  const onDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+    if (active.id === over.id) return;
 
-                            {(imagePreview || currentImageUrl) && (
-                                <div className="mt-2">
-                                    <img
-                                        src={imagePreview || currentImageUrl}
-                                        alt="preview"
-                                        style={{
-                                            width: 140,
-                                            height: 140,
-                                            objectFit: "cover",
-                                            borderRadius: 8,
-                                            border: "1px solid var(--app-border)",
-                                        }}
-                                    />
-                                </div>
-                            )}
+    const oldIndex = fields.findIndex((f) => f.id === active.id);
+    const newIndex = fields.findIndex((f) => f.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
 
-                            <div className="f-caption mt-2">
-                                * Nếu không chọn ảnh mới, hệ thống sẽ giữ nguyên ảnh hiện tại.
-                            </div>
+    move(oldIndex, newIndex);
 
-                            {imagePreview && (
-                                <button
-                                    type="button"
-                                    className="btn-app btn-app--ghost btn-app--sm mt-2"
-                                    onClick={() => {
-                                        if (imagePreview.startsWith("blob:")) {
-                                            URL.revokeObjectURL(imagePreview);
-                                        }
-                                        setImagePreview("");
-                                        setValue("imageFile", null, { shouldDirty: true });
-                                    }}
-                                >
-                                    Bỏ ảnh mới
-                                </button>
-                            )}
-                        </div>
+    const current = getValues("attributeConfigs");
+    const next = arrayMove(current, oldIndex, newIndex).map((it, idx) => ({
+      ...it,
+      displayOrder: idx + 1,
+    }));
+    setValue("attributeConfigs", next, { shouldDirty: true });
+  };
 
+  // ===== parent config modal (giống create) =====
+  const [getParentCategory, { data: dataConfig, isLoading: isLoadingConfig }] = useLazyGetCategoryByIdQuery();
+  const [showModalAttribute, setShowModalAttribute] = useState(false);
+  const closeModalAttribute = () => setShowModalAttribute(false);
+
+  const handleDataConfig = () => {
+    setValue("attributeConfigs", dataConfig?.attributeConfigs ?? [], { shouldDirty: true });
+    closeModalAttribute();
+  };
+
+  // ===== update submit =====
+  const [updateCategory, { isLoading: isUpdating }] = useUpdateCategoryMutation();
+
+  const onSubmit: SubmitHandler<CategoryEditFormUI> = async (data) => {
+    try {
+      if (!id) {
+        toast.error("Thiếu id danh mục");
+        return;
+      }
+
+      // validate options select types
+      let hasInvalid = false;
+      data.attributeConfigs?.forEach((at, i) => {
+        const isSelect = at.dataType === "SELECT" || at.dataType === "MULTI_SELECT";
+        if (!isSelect) return;
+
+        const picked = (at.optionsValue ?? []).filter((x) => x.active).length;
+        if (picked === 0) {
+          hasInvalid = true;
+          setError(`attributeConfigs.${i}.optionsValue` as any, {
+            type: "validate",
+            message: "Chọn ít nhất 1 option",
+          });
+        }
+      });
+
+      if (hasInvalid) {
+        toast.error("Vui lòng chọn option cho các thuộc tính bắt buộc");
+        return;
+      }
+      console.log(data.imageFile);
+      console.log({
+        id: data.id,
+        name: data.name.trim(),
+        slug: data.slug,
+        active: data.active,
+        icon: data.icon,
+        parentId: data.parentId,
+        attributeConfigs: data.attributeConfigs.map((at) => ({
+          id: at.id,
+          isRequired: at.isRequired,
+          isFilterable: at.isFilterable,
+          displayOrder: at.displayOrder,
+          allowedOptionIds: (at.optionsValue ?? []).filter((ot) => ot.active).map((ot) => ot.value),
+        })),
+      });
+
+      const payload: CategoryUpdateForm = {
+        id: data.id,
+        name: data.name.trim(),
+        slug: data.slug,
+        active: data.active,
+        icon: data.icon,
+        parentId: data.parentId,
+        attributeConfigs: data.attributeConfigs.map((at) => ({
+          id: at.id,
+          isRequired: at.isRequired,
+          isFilterable: at.isFilterable,
+          displayOrder: at.displayOrder,
+          allowedOptionIds: (at.optionsValue ?? []).filter((ot) => ot.active).map((ot) => ot.value),
+        })),
+      };
+
+      const fd = new FormData();
+      fd.append("data", new Blob([JSON.stringify(payload)], { type: "application/json" }));
+
+      // chỉ gửi image nếu có chọn mới
+      if (data.imageFile) {
+        fd.append("image", data.imageFile);
+      }
+
+      const res = await updateCategory({ id, body: fd } as any).unwrap();
+      toast.success(res?.message ?? "Cập nhật danh mục thành công");
+      setTimeout(() => navigate("/categories", { replace: true }), 1200);
+    } catch (e: any) {
+      toast.error(e?.data?.message ?? "Có lỗi xảy ra");
+    }
+  };
+
+  const isBusy = isDetailLoading || isDetailFetching || isUpdating;
+
+  return (
+    <div className="border-app--rounded bg-white m-4 py-4 position-relative">
+      {/* Header */}
+      <div className="d-flex align-items-center justify-content-between border-bottom px-4 pb-4">
+        <div>
+          <div className="fw-bold fs-6">Cập nhật danh mục</div>
+          <div className="f-caption">Chỉnh sửa cấu hình danh mục sản phẩm.</div>
+        </div>
+
+        <div className="d-flex align-items-center gap-3">
+          <button className="btn-app btn-app--ghost btn-app--sm" onClick={() => navigate(-1)} disabled={isBusy}>
+            Hủy
+          </button>
+
+          <button
+            type="submit"
+            form="category-edit-form"
+            className="btn-app btn-app--sm d-flex align-items-center gap-2"
+            disabled={isBusy}
+          >
+            <RiSaveLine />
+            {isUpdating ? "Đang lưu..." : "Lưu thay đổi"}
+          </button>
+        </div>
+      </div>
+
+      <FormProvider {...methods}>
+        <form id="category-edit-form" className="form-app pt-4" onSubmit={handleSubmit(onSubmit)}>
+          <fieldset disabled={isBusy}>
+            <Tabs forceRenderTabPanel>
+              <TabList className="px-4 tablist">
+                <Tab>
+                  <div>
+                    <RxDashboard /> <span>Thông tin chung</span>
+                  </div>
+                </Tab>
+                <Tab>
+                  <div>
+                    <CiSettings /> <span>Các thuộc tính</span>
+                  </div>
+                </Tab>
+              </TabList>
+
+              <TabPanel>
+                <div className="px-4">
+                  <div className="row gx-5 gy-4">
+                    <div className="col-12 col-md-6">
+                      <label className="form-label">
+                        Tên danh mục: <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        className="form-control form-control-sm"
+                        placeholder="Ví dụ: Điện thoại"
+                        {...register("name", { required: "Tên không được để trống." })}
+                      />
+                      {errors.name && <span className="form-message-error">{errors.name.message}</span>}
                     </div>
 
+                    <div className="col-12 col-md-6">
+                      <label className="form-label">
+                        Slug: <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        className="form-control form-control-sm"
+                        placeholder="Ví dụ: dien-thoai"
+                        {...register("slug", { required: "Slug không được để trống." })}
+                      />
+                      {errors.slug && <span className="form-message-error">{errors.slug.message}</span>}
+                    </div>
 
-                    <div className="my-4 border-top" />
-                </fieldset>
-            </form>
-        </div>
-    );
+                    <div className="col-12 col-md-6">
+                      <label className="form-label">Danh mục cha</label>
+                      <Controller
+                        name="parentId"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            placeholder="Chọn danh mục cha (level 1–2)"
+                            // tránh chọn chính nó làm cha
+                            options={parentOptions.filter((op) => op.value !== (id ?? "") && op.value !== field.value)}
+                            value={parentOptions.find((o) => o.value === field.value) ?? null}
+                            onChange={async (opt) => {
+                              const parentId = (opt as any)?.value ?? "";
+                              field.onChange(parentId);
+
+                              if (!parentId) {
+                                setShowModalAttribute(false);
+                                return;
+                              }
+
+                              try {
+                                await getParentCategory(parentId).unwrap();
+                                setShowModalAttribute(true);
+                              } catch (e: any) {
+                                toast.error(e?.data?.message ?? "Không lấy được thông tin danh mục cha");
+                              }
+                            }}
+                            isClearable
+                            isLoading={isParentLoading || isParentFetching}
+                            isDisabled={isBusy}
+                            components={{ Control, DropdownIndicator: null, IndicatorSeparator: null }}
+                            styles={selectStyles}
+                          />
+                        )}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="form-label">
+                        Biểu tượng: <span className="text-danger">*</span>
+                      </label>
+
+                      <Controller
+                        name="icon"
+                        control={control}
+                        rules={{ required: "Biểu tượng không được để trống" }}
+                        render={({ field }) => (
+                          <Select<IconOption, false>
+                            value={optionIcons.find((o) => o.value === field.value) ?? null}
+                            onChange={(opt) => field.onChange(opt?.value ?? "")}
+                            options={optionIcons.filter((o) => o.value !== field.value)}
+                            isSearchable
+                            isClearable
+                            isDisabled={isBusy}
+                            placeholder="Chọn biểu tượng"
+                            components={{
+                              Option: IconOptionRender,
+                              SingleValue,
+                              Control,
+                              DropdownIndicator: null,
+                              IndicatorSeparator: null,
+                            }}
+                            styles={{
+                              ...selectStyles,
+                              control: (base: any) => ({ ...base, minHeight: 34 }),
+                              valueContainer: (base: any) => ({ ...base, paddingTop: 0, paddingBottom: 0 }),
+                              indicatorsContainer: (base: any) => ({ ...base, height: 34 }),
+                            }}
+                          />
+                        )}
+                      />
+                      {errors.icon && <span className="form-message-error">{errors.icon.message}</span>}
+                    </div>
+
+                    <div className="col-6 d-flex flex-column gap-3">
+                      {/* Ảnh hiện tại */}
+                      <div>
+                        <label className="form-label">Ảnh hiện tại</label>
+                        {serverImageUrl ? (
+                          <div className="mb-2">
+                            <img
+                              src={serverImageUrl}
+                              alt="category"
+                              style={{
+                                width: 140,
+                                height: 140,
+                                objectFit: "cover",
+                                borderRadius: 8,
+                                border: "1px solid var(--app-border)",
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="text-muted">Không có ảnh</div>
+                        )}
+                      </div>
+
+                      {/* Chọn ảnh mới */}
+                      <div>
+                        <Controller
+                          name="imageFile"
+                          control={control}
+                          rules={{
+                            validate: (file) => {
+                              if (!file) return true; // edit: không bắt buộc
+                              if (file.size > 5 * 1024 * 1024) return "Tối đa 5MB";
+                              const okTypes = ["image/jpeg", "image/png", "image/webp"];
+                              if (!okTypes.includes(file.type)) return "Chỉ hỗ trợ JPG/PNG/WEBP";
+                              return true;
+                            },
+                          }}
+                          render={({ field, fieldState }) => (
+                            <UploadImageBox value={field.value} onChange={field.onChange} error={fieldState.error?.message} />
+                          )}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="form-label">Hiển thị</label>
+                        <Controller
+                          name="active"
+                          control={control}
+                          rules={{ required: { value: true, message: "Trạng thái không được để trống" } }}
+                          render={({ field }) => (
+                            <Select
+                              options={[
+                                { value: true, label: "Có" },
+                                { value: false, label: "Không" },
+                              ]}
+                              value={BOOL_OPTIONS.find((x) => x.value === field.value) ?? BOOL_OPTIONS[0]}
+                              onChange={(v) => field.onChange((v as any)?.value ?? true)}
+                              isSearchable={false}
+                              isDisabled={isBusy}
+                              components={{ DropdownIndicator: null, IndicatorSeparator: null }}
+                              styles={{
+                                ...selectStyles,
+                                control: (base: any) => ({ ...base, minHeight: 34 }),
+                                valueContainer: (base: any) => ({ ...base, paddingTop: 0, paddingBottom: 0 }),
+                                indicatorsContainer: (base: any) => ({ ...base, height: 34 }),
+                              }}
+                            />
+                          )}
+                        />
+                        {errors.active && <span className="form-message-error">{errors.active.message}</span>}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="my-4 border-top" />
+                </div>
+              </TabPanel>
+
+              <TabPanel>
+                <div className="px-4">
+                  <div className="d-flex align-items-center justify-content-between">
+                    <div>
+                      <div className="f-section d-flex align-items-center gap-2">
+                        <div className="fs-4">
+                          <CiSettings />
+                        </div>
+                        <span>Cấu hình thuộc tính</span>
+                      </div>
+                      <span className="f-caption">Chọn thuộc tính và giới hạn các tùy chọn hợp lệ cho danh mục này.</span>
+                    </div>
+
+                    <div style={{ minWidth: 200 }}>
+                      <Select<AttributeConfigUI>
+                        options={options}
+                        placeholder="Tìm kiếm thuộc tính"
+                        isClearable
+                        value={selected}
+                        isSearchable
+                        onInputChange={(v) => setSearch(v)}
+                        filterOption={null}
+                        onChange={onSelect}
+                        noOptionsMessage={() => (search ? "Không tìm thấy" : "Nhấp để tìm")}
+                        isLoading={isAttributeLoading}
+                        components={{ Control, DropdownIndicator: null }}
+                        styles={selectStyles}
+                      />
+                    </div>
+                  </div>
+
+                  {fields && fields.length > 0 ? (
+                    <div className="mt-5">
+                      <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+                        <SortableContext items={fields.map((f) => f.id)} strategy={verticalListSortingStrategy}>
+                          {fields.map((f, index) => (
+                            <SortableAttributeItem
+                              key={f.rhfKey}
+                              index={index}
+                              itemId={f.id}
+                              onDelete={() => remove(index)}
+                            />
+                          ))}
+                        </SortableContext>
+                      </DndContext>
+                    </div>
+                  ) : (
+                    <div className="rounded d-flex align-items-center justify-content-center bg-muted mt-5" style={{ height: 150 }}>
+                      <span className="f-hint">Chưa có thuộc tính nào được cấu hình.</span>
+                    </div>
+                  )}
+                </div>
+              </TabPanel>
+            </Tabs>
+          </fieldset>
+        </form>
+      </FormProvider>
+
+      {/* Modal apply parent config */}
+      <Modal
+        show={showModalAttribute}
+        onHide={closeModalAttribute}
+        centered
+        dialogClassName="modal-app"
+        backdropClassName="modal-app-backdrop"
+      >
+        <Modal.Header>
+          <Modal.Title>
+            <span className="fw-bold fs-5">Xác nhận cấu hình danh mục</span>
+          </Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          <div className="mb-2">Danh mục cha có sẵn cấu hình. Bạn có muốn áp dụng không?</div>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <button type="button" className="btn-app btn-app--sm btn-app--ghost p-3" onClick={closeModalAttribute} disabled={isLoadingConfig}>
+            Huỷ
+          </button>
+          <button type="button" className="btn-app btn-app--sm" onClick={handleDataConfig} disabled={isLoadingConfig}>
+            Đồng ý
+          </button>
+        </Modal.Footer>
+      </Modal>
+    </div>
+  );
 };
 
 export default CategoryEdit;

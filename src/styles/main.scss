@@ -1,5 +1,6 @@
 @use "./tokens/neutral";
 @use "./base/background";
+@use "./base/status";
 @use "./tokens/theme";
 @use "./base/reset";
 @use "./base/typography";
@@ -13,6 +14,9 @@
 @use "./components/modal";
 @use "./components/badge";
 @use "./components/pagination";
+@use "./components/tab";
+@use "./components/upload";
+@use "./components/input";
 
 /* App-specific helpers */
 body {

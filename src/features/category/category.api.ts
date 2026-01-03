@@ -4,15 +4,14 @@ import type { Page } from "../../types/page.type";
 import type {
   Category,
   CategoryOption,
-  CategoryUpdateForm,
-  CategoryDetail
+  CategoryDetail,
 } from "../../types/category.type";
 import type { ApiResponse } from "../../types/api.type";
 
 export const categoryApi = createApi({
   reducerPath: "categoryApi",
   baseQuery,
-  tagTypes: ["Categories", "Category_Option", "Category"],
+  tagTypes: ["Categories", "Category_Option", "Category", "Category_Leaf"],
   endpoints: (builder) => ({
     getAllCategories: builder.query<
       Page<Category>,
@@ -61,7 +60,23 @@ export const categoryApi = createApi({
               { type: "Category_Option" as const, id: "LIST" },
             ]
           : [{ type: "Category_Option" as const, id: "LIST" }],
-      keepUnusedDataFor: 30,
+      keepUnusedDataFor: 0,
+    }),
+    getLeafCategory: builder.query<CategoryOption[], null>({
+      query: () => ({
+        url: "/api/admin/catalog/categories/leaf",
+      }),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map((p) => ({
+                type: "Category_Option" as const,
+                id: p.id,
+              })),
+              { type: "Category_Leaf" as const, id: "LIST" },
+            ]
+          : [{ type: "Category_Leaf" as const, id: "LIST" }],
+      keepUnusedDataFor: 0,
     }),
     createCategory: builder.mutation<ApiResponse, FormData>({
       query: (body) => ({
@@ -73,7 +88,7 @@ export const categoryApi = createApi({
     }),
     updateCategory: builder.mutation<
       ApiResponse,
-      { id: string; body: CategoryUpdateForm }
+      { id: string; body: FormData }
     >({
       query: ({ id, body }) => ({
         url: `/api/admin/catalog/categories/${id}`,
@@ -99,7 +114,9 @@ export const categoryApi = createApi({
 
 export const {
   useGetAllCategoriesQuery,
+  useGetLeafCategoryQuery,
   useGetCategoryByIdQuery,
+  useLazyGetCategoryByIdQuery,
   useDeleteCategoryMutation,
   useGetCategoryOptionQuery,
   useCreateCategoryMutation,

@@ -1,0 +1,32 @@
+.upload-drop {
+  width: 64px;
+  height: 64px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  cursor: pointer;
+  padding: 0;
+  overflow: hidden;
+  line-height: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: #f1f5f9;
+  }
+
+  img.upload-preview {
+    width: 100%;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.w-fit {
+  width: fit-content;
+}

@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Link } from "react-router";
-import { RiArrowLeftLine, RiEditLine } from "react-icons/ri";
+import { RiEditLine } from "react-icons/ri";
 import { useGetAttributeByIdQuery } from "../../features/attribute/attribute.api";
 import type { AttributeDetail } from "../../types/attribute.type";
 import type { Option } from "../../types/select.type";
