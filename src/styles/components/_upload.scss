@@ -1,6 +1,4 @@
 .upload-drop {
-  width: 64px;
-  height: 64px;
   border: 2px dashed #cbd5e1;
   border-radius: 10px;
   background: #f8fafc;
@@ -29,4 +27,51 @@
 
 .w-fit {
   width: fit-content;
+}
+.upload-multi {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.upload-item {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+
+  img.upload-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.upload-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  line-height: 22px;
+  padding: 0;
+}
+
+.upload-drop--add {
+  border-style: dashed;
+}
+
+.upload-add-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-direction: column;
 }

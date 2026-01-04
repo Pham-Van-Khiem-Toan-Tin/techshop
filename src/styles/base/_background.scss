@@ -133,7 +133,9 @@
   border-radius: 14px;
 }
 /* ===== Debug (optional) ===== */
-
+.border-dashed {
+  border-style: dashed !important;
+}
 .bg-debug {
   background-image: repeating-linear-gradient(
     45deg,

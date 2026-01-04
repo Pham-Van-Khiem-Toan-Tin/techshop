@@ -33,6 +33,7 @@ import SortableAttributeItem from "./SortableAttributeItem";
 
 import { Modal } from "react-bootstrap";
 import UploadImageBox from "../../components/common/UploadImageBox";
+import { FiUpload } from "react-icons/fi";
 
 type ParentSelectOption = { value: string; label: string };
 
@@ -75,6 +76,7 @@ const CategoryEdit = () => {
     id ?? "",
     { skip: !id }
   );
+  console.log({ detail });
 
   // ===== Parent options =====
   const { data: parentData, isLoading: isParentLoading, isFetching: isParentFetching } = useGetCategoryOptionQuery(
@@ -200,7 +202,7 @@ const CategoryEdit = () => {
       id: opt.id,
       isRequired: false,
       isFilterable: false,
-      displayOrder: fields.length + 1,
+      displayOrder: fields ? fields.length + 1 : 1,
       label: opt.label,
       code: opt.code,
       dataType: opt.dataType,
@@ -307,6 +309,7 @@ const CategoryEdit = () => {
           allowedOptionIds: (at.optionsValue ?? []).filter((ot) => ot.active).map((ot) => ot.value),
         })),
       };
+      console.log(payload);
 
       const fd = new FormData();
       fd.append("data", new Blob([JSON.stringify(payload)], { type: "application/json" }));
@@ -325,7 +328,9 @@ const CategoryEdit = () => {
   };
 
   const isBusy = isDetailLoading || isDetailFetching || isUpdating;
-
+  const sortedFields = [...fields].sort(
+    (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0)
+  );
   return (
     <div className="border-app--rounded bg-white m-4 py-4 position-relative">
       {/* Header */}
@@ -508,7 +513,16 @@ const CategoryEdit = () => {
                             },
                           }}
                           render={({ field, fieldState }) => (
-                            <UploadImageBox value={field.value} onChange={field.onChange} error={fieldState.error?.message} />
+                            <UploadImageBox
+                              value={field.value}
+                              onChange={field.onChange}
+                              error={fieldState.error?.message}
+                              width='64px'
+                              height='64px'
+                              picker={false}
+                              message=''
+                              Icon={<FiUpload size={22} />}
+                            />
                           )}
                         />
                       </div>
@@ -583,7 +597,7 @@ const CategoryEdit = () => {
                     <div className="mt-5">
                       <DndContext sensors={sensors} onDragEnd={onDragEnd}>
                         <SortableContext items={fields.map((f) => f.id)} strategy={verticalListSortingStrategy}>
-                          {fields.map((f, index) => (
+                          {sortedFields.map((f, index) => (
                             <SortableAttributeItem
                               key={f.rhfKey}
                               index={index}

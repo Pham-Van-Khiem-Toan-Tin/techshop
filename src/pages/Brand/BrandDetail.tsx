@@ -31,7 +31,6 @@ const BrandDetail = () => {
     refetchOnFocus: true,
     refetchOnReconnect: true,
   })
-  console.log(data);
 
   return (
     <div className='border-app--rounded bg-white m-4 py-4'>

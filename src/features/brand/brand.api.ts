@@ -1,13 +1,13 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQuery } from "../../lib/baseQuery";
 import type { Page } from "../../types/page.type";
-import type { Brand, BrandDetail } from "../../types/brand.type";
+import type { Brand, BrandDetail, BrandOption } from "../../types/brand.type";
 import type { ApiResponse } from "../../types/api.type";
 
 export const brandApi = createApi({
   reducerPath: "brandApi",
   baseQuery,
-  tagTypes: ["Brands", "Brand"],
+  tagTypes: ["Brands", "Brand", "Brand_Option"],
   endpoints: (builder) => ({
     getAllBrands: builder.query<
       Page<Brand>,
@@ -35,9 +35,25 @@ export const brandApi = createApi({
           : [{ type: "Brands" as const, id: "LIST" }],
       keepUnusedDataFor: 30,
     }),
+    getBrandOption: builder.query<BrandOption[], null>({
+      query: () => ({
+        url: `/api/admin/catalog/brands/options`,
+      }),
+      providesTags:(result) =>
+        result
+          ? [
+              ...result.map((p) => ({
+                type: "Brand_Option" as const,
+                id: p.id,
+              })),
+              { type: "Brand_Option" as const, id: "LIST" },
+            ]
+          : [{ type: "Brand_Option" as const, id: "LIST" }],
+      keepUnusedDataFor: 0,
+    }),
     getBrandById: builder.query<BrandDetail, string>({
       query: (id) => ({
-        url: `/api/admin/catalog/brands/${id}`
+        url: `/api/admin/catalog/brands/${id}`,
       }),
       providesTags: (result, error, id) => [{ type: "Brand", id }],
       keepUnusedDataFor: 0,
@@ -46,6 +62,14 @@ export const brandApi = createApi({
       query: (body) => ({
         url: "/api/admin/catalog/brands",
         method: "POST",
+        body,
+      }),
+      invalidatesTags: [{ type: "Brands", id: "LIST" }],
+    }),
+    updateBrand: builder.mutation<ApiResponse, { id: string; body: FormData }>({
+      query: ({ id, body }) => ({
+        url: `/api/admin/catalog/brands/${id}`,
+        method: "PUT",
         body,
       }),
       invalidatesTags: [{ type: "Brands", id: "LIST" }],
@@ -67,5 +91,7 @@ export const {
   useGetAllBrandsQuery,
   useCreateBrandMutation,
   useDeleteBrandMutation,
-  useGetBrandByIdQuery
+  useGetBrandByIdQuery,
+  useUpdateBrandMutation,
+  useGetBrandOptionQuery
 } = brandApi;

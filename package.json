@@ -17,6 +17,7 @@
     "@popperjs/core": "^2.11.8",
     "@reduxjs/toolkit": "^2.11.2",
     "@szhsin/react-menu": "^4.5.1",
+    "@tinymce/tinymce-react": "^6.3.0",
     "axios": "^1.13.2",
     "bootstrap": "^5.3.8",
     "nuqs": "^2.8.6",

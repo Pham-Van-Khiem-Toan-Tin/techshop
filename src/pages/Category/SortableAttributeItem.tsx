@@ -12,6 +12,7 @@ const SortableAttributeItem = (props: { index: number; itemId: string, onDelete:
 
     const item = useWatch({ name: `attributeConfigs.${index}`, control });
     const options = item?.optionsValue ?? [];
+    console.log(item);
     
     const isSelect = item?.dataType === "SELECT" || item?.dataType === "MULTI_SELECT";
     const mustPick = isSelect;

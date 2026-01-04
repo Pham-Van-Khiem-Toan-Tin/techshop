@@ -10,8 +10,7 @@ import type { IconOption } from "../../features/data/icon.data";
 import { Control, SingleValue } from "../../configs/select.config";
 import { selectStyles } from "../../features/data/select.data";
 
-import type { AttributeConfigUI, CategoryCreateForm, CategoryDetail, CategoryOption } from "../../types/category.type";
-import type { CategoryCreateFormUI } from "../../types/category.type";
+import type { AttributeConfigUI, CategoryCreateForm, CategoryOption, CategoryCreateFormUI } from "../../types/category.type";
 import {
   useCreateCategoryMutation,
   useGetCategoryOptionQuery,
@@ -28,6 +27,7 @@ import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-ki
 import SortableAttributeItem from "./SortableAttributeItem";
 import { Modal } from "react-bootstrap";
 import UploadImageBox from "../../components/common/UploadImageBox";
+import { FiUpload } from "react-icons/fi";
 
 type ParentSelectOption = {
   value: string;
@@ -153,7 +153,7 @@ const CategoryCreate = () => {
       id: opt.id,
       isRequired: false,
       isFilterable: false,
-      displayOrder: fields.length + 1,
+      displayOrder: fields ? fields.length + 1 : 1,
       label: opt.label,
       code: opt.code,
       dataType: opt.dataType,
@@ -210,6 +210,8 @@ const CategoryCreate = () => {
           allowedOptionIds: at.optionsValue.filter(ot => ot.active).map(ot => ot.value)
         }))
       }
+      console.log(payload);
+      
       fd.append("data", new Blob([JSON.stringify(payload)], { type: "application/json" }))
       // ✅ MultipartFile
       fd.append("image", data.imageFile);
@@ -440,6 +442,11 @@ const CategoryCreate = () => {
                               value={field.value}
                               onChange={field.onChange}
                               error={fieldState.error?.message}
+                              width='64px'
+                              height='64px'
+                              picker={false}
+                              message=''
+                              Icon={<FiUpload size={22} />}
                             />
                           )}
                         />

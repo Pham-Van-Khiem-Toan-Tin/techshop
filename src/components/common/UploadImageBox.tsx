@@ -1,79 +1,217 @@
-import { useRef } from "react"
-import { FiUpload } from "react-icons/fi";
+import React, { useEffect, useMemo, useRef } from "react";
 
-const UploadImageBox = ({ value, onChange, error }) => {
-    const inputRef = useRef(null);
+type UploadItem = File | string;
+type UploadSingle = UploadItem | null;
+type UploadMultiple = UploadItem[];
 
-    const openPicker = () => inputRef.current?.click();
+type CommonProps = {
+  error?: string;
+  picker: boolean;
+  Icon: React.ReactElement;
+  message: string;
+  width: string;
+  height: string;
+  max?: number; // chỉ dùng khi multiple=true
+};
 
-    const handlePick = (e) => {
-        const file = e.target.files?.[0] ?? null;
-        onChange(file);
+type Props =
+  | (CommonProps & {
+      multiple?: false;
+      value: UploadSingle;
+      onChange: (v: UploadSingle) => void;
+    })
+  | (CommonProps & {
+      multiple: true;
+      value: UploadMultiple;
+      onChange: (v: UploadMultiple) => void;
+    });
+
+const UploadImageBox = (props: Props) => {
+  const {
+    picker,
+    Icon,
+    message,
+    width,
+    height,
+    max = 10,
+  } = props;
+
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const openPicker = () => inputRef.current?.click();
+
+  const isMultiple = props.multiple === true;
+
+  const currentList: UploadMultiple = useMemo(() => {
+    if (!isMultiple) {
+      const v = props.value;
+      return v ? [v] : [];
+    }
+    return props.value ?? [];
+  }, [isMultiple, props.value]);
+
+  const addFiles = (files: FileList | File[]) => {
+    const arr = Array.from(files || []);
+    if (!arr.length) return;
+
+    if (isMultiple) {
+      const next = [...currentList, ...arr].slice(0, max);
+      (props as Extract<Props, { multiple: true }>).onChange(next);
+    } else {
+      (props as Extract<Props, { multiple?: false }>).onChange(arr[0] ?? null);
+    }
+  };
+
+  const handlePick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) addFiles(e.target.files);
+    e.target.value = "";
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement | HTMLButtonElement>) => {
+    e.preventDefault();
+    if (e.dataTransfer.files) addFiles(e.dataTransfer.files);
+  };
+
+  const removeAt = (idx: number) => {
+    if (isMultiple) {
+      const next = currentList.filter((_, i) => i !== idx);
+      (props as Extract<Props, { multiple: true }>).onChange(next);
+    } else {
+      (props as Extract<Props, { multiple?: false }>).onChange(null);
+    }
+  };
+
+  // previews: File => objectURL; string => url
+  const previews = useMemo(() => {
+    return currentList.map((item) => {
+      if (typeof item === "string") return { src: item, isObjectUrl: false };
+      const src = URL.createObjectURL(item);
+      return { src, isObjectUrl: true };
+    });
+  }, [currentList]);
+
+  useEffect(() => {
+    return () => {
+      previews.forEach((p) => {
+        if (p.isObjectUrl) URL.revokeObjectURL(p.src);
+      });
     };
+  }, [previews]);
 
-    const handleDrop = (e) => {
-        e.preventDefault();
-        const file = e.dataTransfer.files?.[0] ?? null;
-        onChange(file);
-    };
+  const canAddMore = isMultiple ? currentList.length < max : currentList.length === 0;
 
-    const previewUrl = value ? URL.createObjectURL(value) : null;
-
-    return (
-        <div>
-            <div className="d-flex align-items-center gap-3">
-                {/* Drop area */}
+  return (
+    <div>
+      <div
+        className={isMultiple ? "upload-multi" : "d-flex align-items-center gap-3"}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={handleDrop as any}
+      >
+        {/* MULTIPLE UI: grid + ô add */}
+        {isMultiple ? (
+          <>
+            {previews.map((p, idx) => (
+              <div
+                key={`${p.src}-${idx}`}
+                className="upload-item"
+                style={{ width, height }}
+              >
+                <img src={p.src} alt="preview" className="upload-preview" />
                 <button
-                    type="button"
-                    className="upload-drop position-relative"
-                    onClick={openPicker}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={handleDrop}
+                  type="button"
+                  className="upload-remove"
+                  onClick={() => removeAt(idx)}
+                  aria-label="remove"
                 >
-                    {previewUrl ? (
-                        <img
-                            src={previewUrl}
-                            alt="preview"
-                            className="upload-preview"
-                            onLoad={() => URL.revokeObjectURL(previewUrl)}
-                        />
-                    ) : (
-                        <FiUpload size={22} />
-                    )}
+                  ×
                 </button>
+              </div>
+            ))}
 
-                <div className="d-flex flex-column">
-                    <button
-                        type="button"
-                        className="btn-sm w-fit btn-app btn-app--ghost"
-                        onClick={openPicker}
-                    >
-                        Chọn ảnh từ thiết bị
-                    </button>
-
-                    <small className="text-muted mt-1">
-                        Hỗ trợ JPG, PNG, WEBP. Tối đa 5MB.
-                    </small>
-
-                    {value && (
-                        <small className="mt-1">
-                            Đã chọn: <b>{value.name}</b>
-                        </small>
-                    )}
+            {canAddMore && (
+              <button
+                type="button"
+                className="upload-drop upload-drop--add"
+                style={{ width, height }}
+                onClick={openPicker}
+                onDrop={handleDrop as any}
+              >
+                <div className="upload-add-inner">
+                  {Icon}
+                  {message && <span>{message}</span>}
                 </div>
-
-                <input
-                    ref={inputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    className="d-none"
-                    onChange={handlePick}
+              </button>
+            )}
+          </>
+        ) : (
+          /* SINGLE UI: 1 box */
+          <button
+            type="button"
+            className="upload-drop position-relative"
+            style={{ width, height }}
+            onClick={openPicker}
+            onDrop={handleDrop as any}
+          >
+            {previews[0]?.src ? (
+              <>
+                <img
+                  src={previews[0].src}
+                  alt="preview"
+                  className="upload-preview"
                 />
-            </div>
+                <button
+                  type="button"
+                  className="upload-remove"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeAt(0);
+                  }}
+                  aria-label="remove"
+                >
+                  ×
+                </button>
+              </>
+            ) : (
+              <div className="d-flex align-items-center flex-column gap-2" style={{color: "#9ca3af"}}>
+                {Icon}
+                {message && <span>{message}</span>}
+              </div>
+            )}
+          </button>
+        )}
 
-            {error && <div className="text-danger mt-2">{error}</div>}
-        </div>
-    );
-}
+        {/* phần info + button chọn ảnh (giữ behavior cũ: picker=false => hiện) */}
+        {!picker && (
+          <div className="d-flex flex-column">
+            <button
+              type="button"
+              className="btn-sm w-fit btn-app btn-app--ghost"
+              onClick={openPicker}
+              disabled={!canAddMore}
+            >
+              Chọn ảnh từ thiết bị
+            </button>
 
-export default UploadImageBox
+            <small className="text-muted mt-1">
+              Hỗ trợ JPG, PNG, WEBP. Tối đa 5MB.
+              {isMultiple && (
+                <> ({currentList.length}/{max})</>
+              )}
+            </small>
+          </div>
+        )}
+      </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        multiple={isMultiple} // ✅ bật/tắt bằng props
+        accept="image/jpeg,image/png,image/webp"
+        className="d-none"
+        onChange={handlePick}
+      />
+
+    </div>
+  );
+};
+
+export default UploadImageBox;

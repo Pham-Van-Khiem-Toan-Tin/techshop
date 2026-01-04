@@ -10,6 +10,7 @@ import { CiSearch } from 'react-icons/ci'
 import { useGetLeafCategoryQuery } from '../../features/category/category.api'
 import type { CategoryOption } from '../../types/category.type'
 import { PiEyeLight, PiEyeSlash } from 'react-icons/pi'
+import { FiUpload } from 'react-icons/fi'
 
 const optionsStatus: Record<StatusKey, {
   content: string;
@@ -135,6 +136,11 @@ const BrandCreate = () => {
                         value={field.value}
                         onChange={field.onChange}
                         error={fieldState.error?.message}
+                        width='64px'
+                        height='64px'
+                        picker={false}
+                        message=''
+                        Icon={<FiUpload size={22} />}
                       />
                     )}
                   />

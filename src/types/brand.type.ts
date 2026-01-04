@@ -8,6 +8,11 @@ export interface Brand {
     status: StatusKey;
 }
 
+export interface BrandOption {
+    id: string;
+    name: string;
+}
+
 export interface BrandDetail {
     id: string;
     name: string;
@@ -31,6 +36,16 @@ export interface BrandCreateForm {
 }
 
 export type StatusKey = "active" | "hidden";
+
+export interface BrandEditFormUI {
+    id: string;
+    name: string;
+    slug: string;
+    status: StatusKey;
+    description: string;
+    logo: File | null | string;
+    categories: string[]
+}
 
 export interface BrandCreateFormUI {
     name: string;

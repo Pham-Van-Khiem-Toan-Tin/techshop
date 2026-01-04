@@ -21,7 +21,6 @@ import { createBrowserRouter, Navigate } from "react-router"
 import { RouterProvider } from "react-router/dom"
 import Dashboard from "./pages/Dashboard/Dashboard";
 import RoleManagement from "./pages/Role/RoleManagement";
-import Product from "./pages/Product/Product";
 import Order from "./pages/Order/Order";
 import Login from "./pages/Login/Login";
 import AppBootstrap from "./AppBootstrap";
@@ -51,6 +50,10 @@ import BrandManagement from "./pages/Brand/BrandManagement";
 import BrandCreate from "./pages/Brand/BrandCreate";
 import BrandEdit from "./pages/Brand/BrandEdit";
 import BrandDetail from "./pages/Brand/BrandDetail";
+import ProductManagement from "./pages/Product/ProductManagement";
+import ProductCreate from "./pages/Product/ProductCreate";
+import ProductDetail from "./pages/Product/ProductDetail";
+import ProductEdit from "./pages/Product/ProductEdit";
 
 const router = createBrowserRouter([
   {
@@ -88,7 +91,10 @@ const router = createBrowserRouter([
           { path: "subfunctions/edit/:id", element: <SubFunctionEdit /> },
           { path: "subfunctions/detail/:id", element: <SubFunctionDetail /> },
           { path: "subfunctions/create", element: <SubFunctionCreate /> },
-          { path: "products", element: <Product /> },
+          { path: "products", element: <ProductManagement /> },
+          { path: "products/create", element: <ProductCreate /> },
+          { path: "products/view/:id", element: <ProductDetail /> },
+          { path: "products/edit/:id", element: <ProductEdit /> },
           { path: "orders", element: <Order /> },
           { path: "categories", element: <CategoryManagement /> },
           { path: "categories/create", element: <CategoryCreate /> },
