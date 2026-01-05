@@ -14,7 +14,16 @@ import SKUTabs from "./SKUTabs";
 
 const ProductCreate = () => {
     const navigate = useNavigate();
-    const methods = useForm<ProductFormUI>();
+    const methods = useForm<ProductFormUI>({
+        defaultValues: {
+            name: "",
+            slug: "",
+            shortDescription: "",
+            description: "",
+            skuOptions: [],
+            skus: []
+        }
+    });
     const {
         handleSubmit
     } = methods;

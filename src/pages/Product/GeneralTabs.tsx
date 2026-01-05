@@ -79,7 +79,7 @@ const GeneralTabs = () => {
                         <div className="col-12">
                             <label className="form-label">Danh mục: <span className="text-danger">*</span></label>
                             <Controller
-                                name="categoryId"
+                                name="category.id"
                                 control={control}
                                 rules={{
                                     required: {
@@ -102,7 +102,17 @@ const GeneralTabs = () => {
                                                 const res = await getCategoryDetail(categoryId);
                                                 const {data} = res;
                                                 console.log(data);
-                                                
+                                                setValue("category", {
+                                                    id: data?.id ?? "",
+                                                    name: data?.name ?? "",
+                                                    slug: data?.slug ?? ""
+                                                })
+                                                setValue("skuOptions", [{
+                                                    id: crypto.randomUUID(),
+                                                    name: "",
+                                                    value: "",
+                                                    values: []
+                                                }])
                                                 setValue("attributeOptions", (data?.attributeConfigs ?? []).map(item => ({
                                                     id: item.id,
                                                     code: item.code,
@@ -137,8 +147,8 @@ const GeneralTabs = () => {
                                     />
                                 )}
                             />
-                            {errors.categoryId && (
-                                <span className="form-message-error">{errors.categoryId.message}</span>
+                            {errors.category?.id && (
+                                <span className="form-message-error">{errors.category?.id.message}</span>
                             )}
                         </div>
 

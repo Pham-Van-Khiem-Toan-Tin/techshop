@@ -28,6 +28,7 @@ type Props =
 
 const UploadImageBox = (props: Props) => {
   const {
+    error,
     picker,
     Icon,
     message,
