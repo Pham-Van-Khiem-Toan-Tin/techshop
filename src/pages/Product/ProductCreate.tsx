@@ -1,4 +1,4 @@
-import { FormProvider, useForm, type SubmitHandler } from "react-hook-form"
+import { FormProvider, useForm, useWatch, type SubmitHandler } from "react-hook-form"
 import type { ProductFormUI } from "../../types/product.type"
 import { data, useNavigate } from "react-router";
 import { RiSaveLine } from "react-icons/ri";
@@ -20,19 +20,27 @@ const ProductCreate = () => {
             slug: "",
             shortDescription: "",
             description: "",
+            hasVariants: false,
+            price: 0,
+            originalPrice: 0,
+            costPrice: 0,
+            stock: 0,
             skuOptions: [],
             skus: []
-        }
+        },
+        shouldUnregister: false
     });
     const {
-        handleSubmit
+        handleSubmit,
+        control
     } = methods;
+    const hasVariants = useWatch({ name: "hasVariants", control })
     const onSubmit: SubmitHandler<ProductFormUI> = (data: ProductFormUI) => {
 
     }
     return (
         <div className="d-flex align-items-center justify-content-center">
-            <div className="border-app--rounded bg-white m-4 py-4" style={{width: "1000px"}}>
+            <div className="border-app--rounded bg-white m-4 py-4" style={{ width: "1000px" }}>
                 <div className="d-flex align-items-center justify-content-between border-bottom px-4 pb-4">
                     <div>
                         <div className="fw-bold fs-6">Thêm sản phẩm mới</div>
@@ -72,9 +80,13 @@ const ProductCreate = () => {
                                     <Tab>
                                         <div><IoSettingsOutline /> <span>Thông số kỹ thuật</span></div>
                                     </Tab>
-                                    <Tab>
-                                        <div><GoStack /> <span>Phân loại & Biến thể</span></div>
-                                    </Tab>
+                                    {
+                                        hasVariants && (
+                                            <Tab>
+                                                <div><GoStack /> <span>Phân loại & Biến thể</span></div>
+                                            </Tab>
+                                        )
+                                    }
                                     <Tab>
                                         <div><TbNotes /> <span>Mô tả</span></div>
                                     </Tab>
@@ -85,9 +97,13 @@ const ProductCreate = () => {
                                 <TabPanel>
                                     <AttributeTabs />
                                 </TabPanel>
-                                <TabPanel>
-                                    <SKUTabs />
-                                </TabPanel>
+                                {
+                                    hasVariants && (
+                                        <TabPanel>
+                                            <SKUTabs />
+                                        </TabPanel>
+                                    )
+                                }
                                 <TabPanel>
                                     <DescriptionTabs />
                                 </TabPanel>

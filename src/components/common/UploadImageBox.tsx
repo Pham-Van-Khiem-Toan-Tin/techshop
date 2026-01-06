@@ -132,7 +132,7 @@ const UploadImageBox = (props: Props) => {
               <button
                 type="button"
                 className="upload-drop upload-drop--add"
-                style={{ width, height }}
+                style={{ width, height,  borderColor: error ? "#ef4444" : "#cbd5e1" }}
                 onClick={openPicker}
                 onDrop={handleDrop as any}
               >
@@ -148,7 +148,7 @@ const UploadImageBox = (props: Props) => {
           <button
             type="button"
             className="upload-drop position-relative"
-            style={{ width, height }}
+            style={{ width, height, borderColor: error ? "#ef4444" : "#cbd5e1" }}
             onClick={openPicker}
             onDrop={handleDrop as any}
           >

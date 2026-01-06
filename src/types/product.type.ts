@@ -46,8 +46,20 @@ export interface ProductFormUI {
   slug: string;
   brandId: string;
   category: CategoryDetail;
+  warrantyMonth: number;
   shortDescription: string;
   description: string;
+  hasVariants: boolean;
+  price: number;
+  originalPrice: number;
+  costPrice: number;
+  stock: number;
+  bulk: {
+    price: number;
+    originalPrice: number;
+    costPrice: number;
+    stock: number;
+  };
   image: File | null | string;
   gallery: (File | string)[] | null;
   attributes: Attribute[];
