@@ -21,7 +21,11 @@ const SKUTabs = () => {
         name: "skuOptions",
         keyName: "_id"
     })
-    const watchedSkuOptions = useWatch({ name: "skuOptions", control })
+    const { fields: skuFields, append: appendSkus, replace: replaceSkus, update: updateSkus } = useFieldArray({
+        control,
+        name: "skus",
+        keyName: "skuId"
+    })
     const newGroup = (): Group => ({
         id: crypto.randomUUID(),   // nếu env không support, xem fallback bên dưới
         name: "",
@@ -33,20 +37,20 @@ const SKUTabs = () => {
     }
     const deleteItemGroup = (index: number) => {
         remove(index)
+        const nextSkuOptions = getValues("skuOptions")
+        handleGenerateSkus(nextSkuOptions)
     }
     const convertToSkus = (arr: Group[]) => {
-        // 1. Lọc: Chỉ lấy những nhóm nào CÓ giá trị bên trong
-        // Nếu nhóm rỗng -> Coi như không tồn tại, không nhân vào.
-        const validGroups = arr.filter(item => item.values && item.values.length > 0);
+        const validGroups = arr
+            .map(g => ({
+                ...g,
+                values: (g.values ?? []).filter(v => v.active !== false && v.deprecated !== true),
+            }))
+            .filter(g => g.values.length > 0);
 
-        // 2. Map lấy values như cũ
         const valuesArrays: Val[][] = validGroups.map(item => item.values);
-
-        // 3. Trường hợp đặc biệt: Nếu không có nhóm nào hợp lệ (hoặc xóa hết)
-        // Thì trả về rỗng để không sinh ra SKU rác
         if (valuesArrays.length === 0) return [];
 
-        // 4. Reduce như cũ
         return valuesArrays.reduce<Val[][]>(
             (acc, cur) => acc.flatMap(a => cur.map(b => [...a, b])),
             [[] as Val[]]
@@ -66,43 +70,53 @@ const SKUTabs = () => {
 
         return str;
     }
-    const handleGenerateSkus = (options: Group[]): void => {
-        const currentSkus = getValues("skus") || []
-        const skusConvert = convertToSkus(options)
-        const newSkusList = skusConvert.map(sk => {
-            const skuString = sk.map(s => s.value).join("-")
-            const skuCode = removeVietnameseTones(
-                (productName.trim() || category.slug || "") + "-" + skuString
-            );
-            const existingSku = currentSkus.find(s => s.skuCode === skuCode)
+    const skuKeyFromAttrs = (attrs: Val[]) =>
+        attrs
+            .slice()
+            .sort((a, b) => (a.groupId + a.id).localeCompare(b.groupId + b.id))
+            .map(a => `${a.groupId}:${a.id}`)
+            .join("|");
+
+    const handleGenerateSkus = (options: Group[]) => {
+        const currentSkus = getValues("skus") || [];
+        const combos = convertToSkus(options);
+
+        const newSkusList = combos.map(attrs => {
+            const key = skuKeyFromAttrs(attrs);
+
+            const existingSku = currentSkus.find(s => s.key === key);
+            const skuString = attrs.map(s => s.value).join("-");
+            const skuCode = removeVietnameseTones((productName.trim() || category.slug || "") + "-" + skuString);
+
             return {
-                id: existingSku ? existingSku.id : sk.map(s => s.id).join("-"),
+                ...existingSku,
+                key,
+                id: existingSku?.id || key,
                 image: existingSku?.image || null,
-                skuCode: skuCode,
-                name: (productName.trim() || category.name || "") + " " + sk.map(s => s.value).join(" "),
-                price: existingSku ? existingSku.price : 0,
-                originalPrice: existingSku ? existingSku.originalPrice : 0,
-                stock: existingSku ? existingSku.stock : 0,
+                skuCode: existingSku?.skuCode || skuCode,
+                name: existingSku?.name || (productName.trim() || category.name || "") + " " + attrs.map(s => s.value).join(" "),
+                price: existingSku?.price ?? 0,
+                originalPrice: existingSku?.originalPrice ?? 0,
+                stock: existingSku?.stock ?? 0,
+                costPrice: existingSku?.costPrice ?? 0,
+                locked: false,
+                attributes: attrs
+            };
+        });
 
-                attributes: [...sk]
-            }
-        })
+        // GIỮ SKU “locked/used” kể cả khi không còn được generate (do deprecated value)
+        const lockedSkus = currentSkus.filter(
+            s => s.locked === true && !newSkusList.some(n => n.key === s.key)
+        );
 
-        setValue("skus", newSkusList)
-    }
-    useEffect(() => {
-        // Chỉ chạy khi có dữ liệu
+        replaceSkus([...newSkusList, ...lockedSkus]);
+    };
 
-        if (watchedSkuOptions) {
-            // Gọi hàm sinh SKU (Logic giữ giá cũ y hệt ở trên)
-            handleGenerateSkus(watchedSkuOptions);
-        }
-    }, [watchedSkuOptions])
-    const skus = useWatch({ name: "skus", control })
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
         if (e.key === "Enter") {
             e.preventDefault()
+            const watchedSkuOptions = getValues("skuOptions")
             const currentGroup = watchedSkuOptions[index];
             const name = currentGroup?.name.trim();
             const value = currentGroup?.value.trim()
@@ -125,29 +139,39 @@ const SKUTabs = () => {
             const newVal = {
                 groupId: currentGroup.id,
                 id: crypto.randomUUID(),
-                value: value
+                value: value,
+                active: true,
+                deprecated: false
             }
-            
+
             update(index, {
                 ...currentGroup,
                 values: [...currentGroup.values, newVal],
             })
             setValue(`skuOptions.${index}.value`, "");
+            const nextSkuOptions = getValues("skuOptions")
+            handleGenerateSkus(nextSkuOptions)
         }
     }
-
-
-
     const handDeleteValue = (groupIndex: number, valueId: string) => {
         const currentOptions = getValues("skuOptions");
         const currentGroup = currentOptions[groupIndex];
-        const newValues = currentGroup.values.filter(v => v.id !== valueId)
-        const updateGroup = {
-            ...currentGroup,
-            values: newValues
-        }
-        update(groupIndex, updateGroup)
-    }
+        const currentSkus = getValues("skus") ?? [];
+
+        const usedByLockedSku = currentSkus.some(
+            s => s.locked && s.attributes.some(a => a.id === valueId)
+        );
+
+        const newValues = currentGroup.values.map(v => {
+            if (v.id !== valueId) return v;
+            if (v.used || usedByLockedSku) return { ...v, active: false, deprecated: true };
+            return null as any;
+        }).filter(Boolean);
+
+        update(groupIndex, { ...currentGroup, values: newValues });
+
+        handleGenerateSkus(getValues("skuOptions"));
+    };
 
     const onlyNumberNoLeadingZero = (value: string) => {
         // 1. Xóa mọi ký tự không phải số
@@ -235,6 +259,19 @@ const SKUTabs = () => {
 
         return decPart !== undefined ? `${intNorm}.${decPart}` : intNorm;
     };
+    const handleBulkApplyAll = () => {
+
+        const skusValue = getValues("skus") ?? []
+        const bulk = getValues("bulk")
+        const newItems = skusValue.map(item => ({
+            ...item,
+            price: bulk.price,
+            costPrice: bulk.costPrice,
+            originalPrice: bulk.originalPrice,
+            stock: bulk.stock
+        }))
+        replaceSkus(newItems)
+    }
     return (
         <div className='px-4'>
             {attributesOptions != null && attributesOptions.length > 0 ?
@@ -244,7 +281,7 @@ const SKUTabs = () => {
                             <div className='f-meta f-bold form-label mb-0'>Cấu hình nhóm phân loại</div>
                             <div className='f-caption'>Thêm các nhóm như Màu sắc, Kích thước.</div>
                             {fields?.map((field, index) => (
-                                <div key={field.id} className='form-app border-app--rounded p-3'>
+                                <div key={field._id} className='form-app border-app--rounded p-3'>
                                     <div>
                                         <div className='d-flex align-items-center justify-content-between'>
                                             <label htmlFor={"name" + index} className='f-body-sm fw-bold'>Tên nhóm phân loại {index + 1}</label>
@@ -280,7 +317,72 @@ const SKUTabs = () => {
                         <div className='col-8 form-app flex-column'>
                             <div className='f-meta f-bold form-label mb-0'>Danh sách biến thể (SKU)</div>
                             <div className='f-caption'>Vui lòng thêm nhóm phân loại để tạo biến thể.</div>
-                            {skus && skus.length > 0 ? (
+                            <div className='form-app'>
+                                <div className='row'>
+                                    <div className='col-2'>
+                                        <label className='form-label' htmlFor="bulk-price">Giá bán hàng loạt</label>
+                                        <Controller
+                                            control={control}
+                                            name='bulk.price'
+                                            render={({ field }) => (
+                                                <input id='bulk-price' className='form-control form-control-sm' type="text"
+                                                    value={field.value}
+                                                    onKeyDown={allowNumberAndDotNoLeadingDotKeyDown}
+                                                    onChange={(e) => field.onChange(normalizeNumberDotOnChange(e.target.value))}
+                                                />
+                                            )}
+                                        />
+                                    </div>
+                                    <div className='col-2'>
+                                        <label className='form-label' htmlFor="bulk-costPrice">Giá gốc hàng loạt</label>
+                                        <Controller
+                                            control={control}
+                                            name='bulk.costPrice'
+                                            render={({ field }) => (
+                                                <input id='bulk-costPrice' className='form-control form-control-sm' type="text"
+                                                    value={field.value}
+                                                    onKeyDown={allowNumberAndDotNoLeadingDotKeyDown}
+                                                    onChange={(e) => field.onChange(normalizeNumberDotOnChange(e.target.value))}
+                                                />
+                                            )}
+                                        />
+                                    </div>
+                                    <div className='col-2'>
+                                        <label className='form-label' htmlFor="bulk-originalPrice">Giá niêm yết hàng loạt</label>
+                                        <Controller
+                                            control={control}
+                                            name='bulk.originalPrice'
+                                            render={({ field }) => (
+                                                <input id='bulk-originalPrice' className='form-control form-control-sm' type="text"
+                                                    value={field.value}
+                                                    onKeyDown={allowNumberAndDotNoLeadingDotKeyDown}
+                                                    onChange={(e) => field.onChange(normalizeNumberDotOnChange(e.target.value))}
+                                                />
+                                            )}
+                                        />
+                                    </div>
+                                    <div className='col-2'>
+                                        <label className='form-label' htmlFor="bulk-stock">Số lượng hàng loạt</label>
+                                        <Controller
+                                            control={control}
+                                            name='bulk.stock'
+                                            render={({ field }) => (
+                                                <input id='bulk-stock' className='form-control form-control-sm' type="text"
+                                                    value={field.value}
+                                                    onKeyDown={allowOnlyNumberKeyDown}
+                                                    onChange={(e) => field.onChange(onlyNumberNoLeadingZero(e.target.value))}
+                                                />
+                                            )}
+                                        />
+                                    </div>
+                                    <div className='d-flex align-items-end col-2'>
+                                        <button onClick={handleBulkApplyAll} type='button' className='btn-app btn-app--sm'>
+                                            Áp dụng hàng loạt
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {skuFields && skuFields.length > 0 ? (
                                 <div className='overflow-x-auto'>
                                     <table className='table-app' style={{ width: 800 }}>
                                         <thead>
@@ -294,8 +396,8 @@ const SKUTabs = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {skus.map((item, index) => (
-                                                <tr key={item.id}>
+                                            {skuFields.map((item, index) => (
+                                                <tr key={item.skuId}>
                                                     <td>
                                                         <Controller
                                                             control={control}

@@ -116,9 +116,12 @@ const CategoryManagement = () => {
       { key: "level", title: "Level", muted: true, render: (c) => c.level },
       {
         key: "isVisible",
-        title: "Hiển thị",
+        title: "Trạng thái",
         muted: true,
-        render: (c) => (c.active ? "Có" : "Không"),
+        render: (r) => (
+          <span className={`status status--sm ${r.active ? "status--active" : "status--inactive"}`}>
+            {r.active ? "Hoạt động" : "Vô hiệu hóa"}
+          </span>),
       },
     ],
     []

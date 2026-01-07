@@ -5,7 +5,7 @@ import { Controller, useForm, useFieldArray, useWatch, type SubmitHandler } from
 import { useNavigate, useParams } from "react-router"
 import Select from "react-select"
 import { type Option } from "../../types/select.type";
-import type { AttributeCreateForm, AttributeEditForm } from "../../types/attribute.type";
+import type { AttributeEditForm, OptionAttribute } from "../../types/attribute.type";
 import { useEditAttributeMutation, useGetAttributeByIdQuery } from "../../features/attribute/attribute.api";
 import { toast } from "react-toastify";
 import { useEffect } from "react";
@@ -33,9 +33,9 @@ const AttributeEdit = () => {
     }
   })
   const { data: attributeDetail, isLoading: isLoadingDetail, isError, error } = useGetAttributeByIdQuery(attributeId!, { skip: !attributeId })
-  
+
   useEffect(() => {
-    if(!attributeDetail) return;
+    if (!attributeDetail) return;
     reset({
       id: attributeDetail.id,
       code: attributeDetail.code,
@@ -45,7 +45,7 @@ const AttributeEdit = () => {
       options: attributeDetail.options
     })
   }, [attributeDetail, reset])
-  
+
 
   const [editAttribute, { isLoading: isEditing }] = useEditAttributeMutation()
   const dataType = useWatch({ control, name: "dataType" });
@@ -65,9 +65,9 @@ const AttributeEdit = () => {
       clearErrors("options");
     }
   };
-  const normalizeOptions = (arr?: { value: string; label: string }[]) =>
+  const normalizeOptions = (arr?: OptionAttribute[]) =>
     (arr ?? [])
-      .map(x => ({ value: x.value?.trim() ?? "", label: x.label?.trim() ?? "" }))
+      .map(x => ({ value: x.value?.trim() ?? "", label: x.label?.trim() ?? "", id: x.id, active: x.active, deprecated: x.deprecated }))
       .filter(x => x.value !== "" && x.label !== "");
   const onSubmit: SubmitHandler<AttributeEditForm> = async (data: AttributeEditForm) => {
     try {
@@ -82,7 +82,7 @@ const AttributeEdit = () => {
         options: cleanedOptions, // SELECT/MULTI_SELECT thì array sạch, còn lại null
         unit: data.dataType === "NUMBER" ? data.unit?.trim() : null,
       };
-      const res = await editAttribute({id: payload.id, body: payload}).unwrap()
+      const res = await editAttribute({ id: payload.id, body: payload }).unwrap()
       toast.success(res.message)
       setTimeout(() => {
         navigate("/attributes", { replace: true })
@@ -119,7 +119,7 @@ const AttributeEdit = () => {
                     value: true,
                     message: "Id không được để trống."
                   }
-                })}  type="text" id='name' className='form-control form-control-sm' placeholder='Ví dụ: RAM' />
+                })} type="text" id='name' className='form-control form-control-sm' placeholder='Ví dụ: RAM' />
                 {errors.id && <span className='form-message-error'>{errors.id?.message}</span>}
               </div>
               <div className="col-6">
@@ -129,7 +129,7 @@ const AttributeEdit = () => {
                     value: true,
                     message: "Tên hiển thị được để trống."
                   }
-                })}  type="text" id='name' className='form-control form-control-sm' placeholder='Ví dụ: RAM' />
+                })} type="text" id='name' className='form-control form-control-sm' placeholder='Ví dụ: RAM' />
                 {errors.label && <span className='form-message-error'>{errors.label?.message}</span>}
               </div>
               <div className="col-6">
@@ -206,8 +206,8 @@ const AttributeEdit = () => {
                   <button
                     type="button"
                     className="btn-app btn-app--sm btn-app--ghost"
-                    onClick={() => append({ value: "", label: "" })}
-                    
+                    onClick={() => append({ id: crypto.randomUUID(), value: "", label: "", active: true, deprecated: false })}
+
                   >
                     + Thêm dòng
                   </button>
@@ -228,7 +228,7 @@ const AttributeEdit = () => {
                           <td>
                             <input
                               className="form-control form-control-sm"
-                              
+
                               {...register(`options.${idx}.value` as const, {
                                 validate: (v) => {
                                   if (!isSelect) return true;
@@ -246,7 +246,7 @@ const AttributeEdit = () => {
                           <td>
                             <input
                               className="form-control form-control-sm"
-                              
+
                               {...register(`options.${idx}.label` as const, {
                                 validate: (v) => {
                                   if (!isSelect) return true;

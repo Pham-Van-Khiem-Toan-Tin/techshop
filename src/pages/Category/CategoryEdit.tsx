@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import Select, { components } from "react-select";
-import { Controller, FormProvider, useFieldArray, useForm, type SubmitHandler } from "react-hook-form";
+import { Controller, FormProvider, useFieldArray, useForm, useWatch, type SubmitHandler } from "react-hook-form";
 import { toast } from "react-toastify";
 import { RiSaveLine } from "react-icons/ri";
 
@@ -147,9 +147,12 @@ const CategoryEdit = () => {
             unit: at.unit,
             // map options
             optionsValue: (at.optionsValue ?? at.options ?? []).map((op: any) => ({
-              value: op.value ?? op.id,
-              label: op.label ?? op.name,
+              id: op.id,
+              value: op.value,
+              label: op.label,
               active: !!op.active,
+              deprecated: !!op.deprecated,
+              selected: !!op.selected
             })),
           })) ?? [],
       },
@@ -183,7 +186,7 @@ const CategoryEdit = () => {
           code: x.code,
           dataType: x.dataType,
           unit: x.unit,
-          optionsValue: x.options.map((op) => ({ value: op.value, label: op.label, active: false })),
+          optionsValue: x.options.map((op) => ({ id: op.id, value: op.value, label: op.label, active: op.active, deprecated: op.deprecated })),
         }))
       );
     };
@@ -263,7 +266,7 @@ const CategoryEdit = () => {
         const isSelect = at.dataType === "SELECT" || at.dataType === "MULTI_SELECT";
         if (!isSelect) return;
 
-        const picked = (at.optionsValue ?? []).filter((x) => x.active).length;
+        const picked = (at.optionsValue ?? []).filter((x) => x.selected).length;
         if (picked === 0) {
           hasInvalid = true;
           setError(`attributeConfigs.${i}.optionsValue` as any, {
@@ -290,7 +293,7 @@ const CategoryEdit = () => {
           isRequired: at.isRequired,
           isFilterable: at.isFilterable,
           displayOrder: at.displayOrder,
-          allowedOptionIds: (at.optionsValue ?? []).filter((ot) => ot.active).map((ot) => ot.value),
+          allowedOptionIds: (at.optionsValue ?? []).filter((ot) => ot.selected).map((ot) => ot.value),
         })),
       });
 
@@ -303,10 +306,11 @@ const CategoryEdit = () => {
         parentId: data.parentId,
         attributeConfigs: data.attributeConfigs.map((at) => ({
           id: at.id,
+          code: at.code,
           isRequired: at.isRequired,
           isFilterable: at.isFilterable,
           displayOrder: at.displayOrder,
-          allowedOptionIds: (at.optionsValue ?? []).filter((ot) => ot.active).map((ot) => ot.value),
+          allowedOptionIds: (at.optionsValue ?? []).filter((ot) => ot.selected).map((ot) => ot.id),
         })),
       };
       console.log(payload);
@@ -328,9 +332,12 @@ const CategoryEdit = () => {
   };
 
   const isBusy = isDetailLoading || isDetailFetching || isUpdating;
+  // const attributeOptionWatch = useWatch({name: "attributeConfigs", control})
   const sortedFields = [...fields].sort(
     (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0)
   );
+  console.log({sortedFields});
+  
   return (
     <div className="border-app--rounded bg-white m-4 py-4 position-relative">
       {/* Header */}

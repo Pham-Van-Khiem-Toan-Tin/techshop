@@ -92,7 +92,8 @@ const CategoryDetail = () => {
   useEffect(() => {
     if (!detail) return;
     const d = detail as CategoryDetail;
-
+    console.log({d});
+    
     const imageUrl = d.image.imageUrl ?? "";
     setServerImageUrl(imageUrl);
 
@@ -115,9 +116,12 @@ const CategoryDetail = () => {
             dataType: at.dataType,
             unit: at.unit,
             optionsValue: (at.optionsValue ?? at.options ?? []).map((op: any) => ({
-              value: op.value ?? op.id,
-              label: op.label ?? op.name,
+              id: op.id,
+              value: op.value,
+              label: op.label,
               active: !!op.active,
+              deprecated: !!op.deprecated,
+              selected: !!op.selected
             })),
           })) ?? [],
       },
@@ -323,7 +327,7 @@ const CategoryDetail = () => {
                         .sort((a: any, b: any) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
                         .map((f: any) => {
                           const isSelect = f.dataType === "SELECT" || f.dataType === "MULTI_SELECT";
-                          const picked = (f.optionsValue ?? []).filter((x: any) => x.active);
+                          const picked = (f.optionsValue ?? []).filter((x: any) => x.selected);
 
                           return (
                             <div key={f.rhfKey} className="border rounded p-3">

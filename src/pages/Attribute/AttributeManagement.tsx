@@ -78,6 +78,8 @@ const AttributeManagement = () => {
     sort: query.sort,
   }, { refetchOnFocus: true, refetchOnReconnect: true })
   const rows: Attribute[] = data?.content ?? [];
+  console.log(data?.content);
+  
   const totalPages = Math.max(
     1,
     Math.ceil(((data as Page<Attribute>)?.total ?? 0) / size)
@@ -90,7 +92,11 @@ const AttributeManagement = () => {
     [
       { key: "code", title: "Mã (CODE)", strong: true, render: (r) => r.code },
       { key: "label", title: "Tên hiển thị", muted: true, render: (r) => r.label },
-      { key: "dataType", title: "Kiểu dữ liệu", muted: true, render: (r) => r.dataType }
+      { key: "dataType", title: "Kiểu dữ liệu", muted: true, render: (r) => r.dataType },
+      {key: "status", title: "Trạng thái", muted: true, render: (r) => (
+                    <span className={`status status--sm ${r.active ? "status--active" : "status--inactive"}`}>
+                        {r.active ? "Hoạt động" : "Vô hiệu hóa"}
+                    </span>)}
     ]
     , []);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);

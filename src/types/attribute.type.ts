@@ -4,6 +4,7 @@ export interface Attribute {
     id: string;
     code: string;
     label: string;
+    active: boolean;
     dataType: string;
 }
 
@@ -18,22 +19,29 @@ export interface AttributeDetail {
     label: string;
     dataType: string;
     unit: string;
-    options: Option[];
+    options: OptionAttribute[];
 }
 
 export interface AttributeCreateForm {
     code: string;
     label: string;
     dataType: string;
-    options?: Option[];
+    options?: OptionAttribute[];
     unit?: string | null;
 }
 
+export interface OptionAttribute {
+    id: string,
+    label: string;
+    value: string;
+    active: boolean;
+    deprecated: boolean;
+}
 export interface AttributeEditForm {
     id: string;
     code: string;
     label: string;
     dataType: string;
-    options?: Option[];
+    options?: OptionAttribute[];
     unit?: string | null;
 }

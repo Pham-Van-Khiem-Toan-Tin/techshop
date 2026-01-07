@@ -5,7 +5,7 @@ import { Controller, useForm, useFieldArray, useWatch, type SubmitHandler } from
 import { useNavigate } from "react-router"
 import Select from "react-select"
 import { type Option } from "../../types/select.type";
-import type { AttributeCreateForm } from "../../types/attribute.type";
+import type { AttributeCreateForm, OptionAttribute } from "../../types/attribute.type";
 import { useCreateAttributeMutation } from "../../features/attribute/attribute.api";
 import { toast } from "react-toastify";
 
@@ -46,9 +46,9 @@ const AttributeCreate = () => {
             clearErrors("options");
         }
     };
-    const normalizeOptions = (arr?: { value: string; label: string }[]) =>
+    const normalizeOptions = (arr?: OptionAttribute[]) =>
         (arr ?? [])
-            .map(x => ({ value: x.value?.trim() ?? "", label: x.label?.trim() ?? "" }))
+            .map(x => ({ id: x.id, value: x.value?.trim() ?? "", label: x.label?.trim() ?? "", active: true, deprecated: false }))
             .filter(x => x.value !== "" && x.label !== "");
     const onSubmit: SubmitHandler<AttributeCreateForm> = async (data: AttributeCreateForm) => {
         try {
@@ -177,7 +177,7 @@ const AttributeCreate = () => {
                                     <button
                                         type="button"
                                         className="btn-app btn-app--sm btn-app--ghost"
-                                        onClick={() => append({ value: "", label: "" })}
+                                        onClick={() => append({ id: crypto.randomUUID(), value: "", label: "", active: true, deprecated: false })}
                                         disabled={isCreating}
                                     >
                                         + Thêm dòng

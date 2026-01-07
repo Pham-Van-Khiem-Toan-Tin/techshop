@@ -13,7 +13,7 @@ import { useGetLeafCategoryQuery, useLazyGetCategoryByIdQuery } from '../../feat
 import { toast } from 'react-toastify';
 
 const GeneralTabs = () => {
-    const { register, control, setValue, formState: { errors } } = useFormContext<ProductFormUI>();
+    const { register, control, setValue, formState: { errors }, getValues } = useFormContext<ProductFormUI>();
     const { data: dataBrand, isLoading: isBrandLoading } = useGetBrandOptionQuery(null);
     const { data: dataCategory, isLoading: isCategoryLoading } = useGetLeafCategoryQuery(null);
     const [getCategoryDetail, { isLoading: isAttributeLoading }] = useLazyGetCategoryByIdQuery();
@@ -129,7 +129,7 @@ const GeneralTabs = () => {
                             <input
                                 className="form-control form-control-sm"
                                 placeholder="Ví dụ: iphone-15-promax"
-                                {...register("slug", { required: "Nhãn menu không được để trống." })}
+                                {...register("slug", { required: "Slug không được để trống." })}
                             />
                             {errors.slug && (
                                 <span className="form-message-error">{errors.slug.message}</span>
@@ -222,7 +222,9 @@ const GeneralTabs = () => {
                                                     name: item.label,
                                                     unit: item.unit,
                                                     value: "",
-                                                    label: ""
+                                                    label: "",
+                                                    labelOption: "",
+                                                    selected: false
                                                 })))
                                             } catch (error: any) {
                                                 toast.error(error?.data?.message ?? "Không lấy được thông tin danh mục");
@@ -392,8 +394,14 @@ const GeneralTabs = () => {
                                 <div className='pt-2 d-flex flex-column align-items-start gap-2'>
                                     <span>Sản phẩm có nhiểu biến thể vui lòng chọn nút bên dưới</span>
                                     <button onClick={() => {
-                                        if (category.id) {
+                                        if (category && category.id) {
                                             setValue("hasVariants", true)
+                                            setValue("bulk", {
+                                                price: getValues("price"),
+                                                originalPrice: getValues("originalPrice"),
+                                                costPrice: getValues("costPrice"),
+                                                stock: getValues("stock")
+                                            })
                                         } else {
                                             toast.error("Vui lòng chọn danh mục trước khi tạo biến thể.")
                                         }

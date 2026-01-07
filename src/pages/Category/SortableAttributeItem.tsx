@@ -17,7 +17,7 @@ const SortableAttributeItem = (props: { index: number; itemId: string, onDelete:
     const isSelect = item?.dataType === "SELECT" || item?.dataType === "MULTI_SELECT";
     const mustPick = isSelect;
 
-    const pickedCount = options.filter((x) => x.active).length;
+    const pickedCount = options.filter((x) => x.selected).length;
 
     const err = (errors.attributeConfigs?.[index] as any)?.optionsValue?.message as string | undefined;
     const {
@@ -110,7 +110,7 @@ const SortableAttributeItem = (props: { index: number; itemId: string, onDelete:
                                 <label className="label-option-select">
                                     <input
                                         type="checkbox"
-                                        {...register(`attributeConfigs.${index}.optionsValue.${indexOpt}.active`, {
+                                        {...register(`attributeConfigs.${index}.optionsValue.${indexOpt}.selected`, {
                                             onChange: async () => {
                                                 // mỗi lần tick option -> chạy lại validate
                                                 if (mustPick) {

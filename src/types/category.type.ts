@@ -29,9 +29,12 @@ export interface CategoryOption {
     parentId: string;
 }
 export interface OptionAttribute {
+  id: string;
   value: string;
   label: string;
   active: boolean;
+  deprecated: boolean;
+  selected?: boolean;
 }
 
 export interface AttributeConfigUI {
@@ -71,6 +74,7 @@ export interface CategoryCreateFormUI {
 
 export interface AttributeConfig {
   id: string;
+  code: string;
   isRequired: boolean;
   isFilterable: boolean;
   displayOrder: number;
