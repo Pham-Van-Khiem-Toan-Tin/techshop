@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import type React from "react";
 
 export type Align = "left" | "right";
@@ -15,7 +15,8 @@ export type Column<T> = {
 
 export type TableAction<T> = {
   key: string;
-  label: string | Element | ReactNode;
+  label?: string | ReactNode;
+  labelOption?: (row: T) => ReactNode;
   tone?: "default" | "danger";
   visible?: (row: T) => boolean;
   disabled?: (row: T) => boolean;
@@ -51,7 +52,6 @@ export type DataTableSelection<T> = {
 export type DataTableProps<T> = {
   title?: string;
   description?: string;
-
   columns: Column<T>[];
   rows: T[];
 

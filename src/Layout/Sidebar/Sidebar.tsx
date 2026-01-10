@@ -18,6 +18,9 @@ const Sidebar = () => {
         <NavLink to="/dashboard" className={linkClass}>
           Tổng quan
         </NavLink>
+        <NavLink to="/users" className={linkClass}>
+          Quản lý người dùng
+        </NavLink>
         <NavLink to="/roles" className={linkClass}>
           Quản lí vai trò
         </NavLink>

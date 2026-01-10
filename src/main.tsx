@@ -21,7 +21,6 @@ import { createBrowserRouter, Navigate } from "react-router"
 import { RouterProvider } from "react-router/dom"
 import Dashboard from "./pages/Dashboard/Dashboard";
 import RoleManagement from "./pages/Role/RoleManagement";
-import Order from "./pages/Order/Order";
 import Login from "./pages/Login/Login";
 import AppBootstrap from "./AppBootstrap";
 import ProtectedRoute from "./auth/ProtectedRoute";
@@ -54,7 +53,10 @@ import ProductManagement from "./pages/Product/ProductManagement";
 import ProductCreate from "./pages/Product/ProductCreate";
 import ProductDetail from "./pages/Product/ProductDetail";
 import ProductEdit from "./pages/Product/ProductEdit";
-
+import OrderManagement from "./pages/Order/OrderManagement";
+import OrderDetail from "./pages/Order/OrderDetail";
+import OrderEdit from "./pages/Order/OrderEdit";
+import UserManagement from "./pages/User/UserManagement";
 const router = createBrowserRouter([
   {
     element: (
@@ -95,7 +97,9 @@ const router = createBrowserRouter([
           { path: "products/create", element: <ProductCreate /> },
           { path: "products/view/:id", element: <ProductDetail /> },
           { path: "products/edit/:id", element: <ProductEdit /> },
-          { path: "orders", element: <Order /> },
+          { path: "orders", element: <OrderManagement /> },
+          { path: "orders/view/:id", element: <OrderDetail /> },
+          { path: "orders/edit/:id", element: <OrderEdit /> },
           { path: "categories", element: <CategoryManagement /> },
           { path: "categories/create", element: <CategoryCreate /> },
           { path: "categories/view/:id", element: <CategoryDetail /> },
@@ -104,7 +108,7 @@ const router = createBrowserRouter([
           {path: "attributes/create", element: <AttributeCreate />},
           {path: "attributes/edit/:id", element: <AttributeEdit />},
           {path: "attributes/view/:id", element: <AttributeDetail />},
-
+          {path: "users", element: <UserManagement />},
           { path: "brands", element: <BrandManagement /> },
           {path: "brands/create", element: <BrandCreate />},
           {path: "brands/edit/:id", element: <BrandEdit />},

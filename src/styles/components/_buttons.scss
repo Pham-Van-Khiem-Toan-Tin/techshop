@@ -24,6 +24,9 @@
 
   --btn-radius: var(--radius-md);
   --btn-shadow: var(--shadow-sm);
+  --btn-active-bg: var(--active-bg);
+  --btn-active-fg: var(--active);
+
 }
 
 /* Base button (dùng cho <button> hoặc <a>) */
@@ -90,6 +93,10 @@
   border-radius: var(--radius-lg);
 }
 
+.btn-app--active {
+  --btn-bg: var(--btn-active-bg);
+  --btn-fg: var(--btn-active-fg);
+}
 /* Variants */
 .btn-app--default {
   --btn-bg: var(--neutral-900);

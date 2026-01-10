@@ -1,7 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { User } from "./auth.api";
 import { getMe, logoutRequest } from "./auth.api";
-import { data } from "react-router";
 
 type AuthState = {
   status: "idle" | "loading" | "authenticated" | "unauthenticated";
@@ -28,9 +27,8 @@ export const fetchMe = createAsyncThunk<User>(
       if (is_login_success != null && JSON.parse(is_login_success)) {
         window.location.href = "http://localhost:8088/oauth2/authorization/admin-idp";
       }
-      console.log(e);
       localStorage.setItem("is_login_success","false");
-      return rejectWithValue("UNAUTHENTICATED");
+      return rejectWithValue(e);
     }
   }
 );

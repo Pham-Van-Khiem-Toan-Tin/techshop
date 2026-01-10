@@ -3,7 +3,7 @@
 import { selectStyles } from '../../features/data/select.data'
 import Select from "react-select";
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
-import type { ProductFormUI } from '../../types/product.type';
+import type { DataType, ProductFormUI } from '../../types/product.type';
 import UploadImageBox from '../../components/common/UploadImageBox';
 import { PiImageSquareLight } from 'react-icons/pi';
 import { IoAdd } from 'react-icons/io5';
@@ -105,6 +105,20 @@ const GeneralTabs = () => {
 
         return decPart !== undefined ? `${intNorm}.${decPart}` : intNorm;
     };
+    const toDataType = (x: unknown): DataType => {
+        switch (x) {
+            case "TEXT":
+            case "NUMBER":
+            case "DATE":
+            case "BOOLEAN":
+            case "SELECT":
+            case "MULTI_SELECT":
+                return x;
+            default:
+                return "TEXT"; // fallback an toàn (hoặc throw nếu bạn muốn strict)
+        }
+    };
+
     return (
         <div className="px-4">
             <div className="row">
@@ -201,31 +215,34 @@ const GeneralTabs = () => {
                                                     value: "",
                                                     values: []
                                                 }])
-                                                setValue("attributeOptions", (data?.attributeConfigs ?? []).map(item => ({
-                                                    id: item.id,
-                                                    code: item.code,
-                                                    label: item.label,
-                                                    isRequired: item.isRequired,
-                                                    isFilterable: item.isFilterable,
-                                                    displayOrder: item.displayOrder,
-                                                    unit: item.unit,
-                                                    dataType: item.dataType,
-                                                    options: (item.optionsValue ?? []).filter(ot => ot.active).map(ot => ({
-                                                        value: ot.value,
-                                                        label: ot.label,
-                                                        selected: false
-                                                    }))
-                                                })));
-                                                setValue("attributes", (data?.attributeConfigs ?? []).map((item) => ({
-                                                    id: item.id,
-                                                    code: item.code,
-                                                    name: item.label,
-                                                    unit: item.unit,
-                                                    value: "",
-                                                    label: "",
-                                                    labelOption: "",
-                                                    selected: false
-                                                })))
+                                                setValue("attributeOptions", (data?.attributeConfigs ?? []).map(item => {
+                                                    const dt = toDataType(item.dataType);
+                                                    return {
+                                                        id: item.id,
+                                                        code: item.code,
+                                                        label: item.label,
+                                                        isRequired: item.isRequired,
+                                                        isFilterable: item.isFilterable,
+                                                        displayOrder: item.displayOrder,
+                                                        unit: item.unit,
+                                                        dataType: dt,
+                                                        options: (item.optionsValue ?? [])
+                                                            .filter((ot) => ot.active)
+                                                            .map((ot) => ({ id: ot.id, value: ot.id, label: ot.label })),
+                                                    };
+                                                }));
+                                                setValue("attributes", (data?.attributeConfigs ?? []).map((item) => {
+                                                    const dt = toDataType(item.dataType);
+                                                    return {
+                                                        id: item.id,
+                                                        code: item.code,
+                                                        dataType: dt,
+                                                        label: item.label,
+                                                        displayOrder: item.displayOrder ?? 0,
+                                                        unit: item.unit ?? "",
+                                                        value: "",
+                                                    }
+                                                }))
                                             } catch (error: any) {
                                                 toast.error(error?.data?.message ?? "Không lấy được thông tin danh mục");
                                             }
@@ -466,44 +483,48 @@ const GeneralTabs = () => {
                                 rules={{
                                     required: "Vui lòng chọn ảnh",
                                     validate: (value) => {
-                                        // 1. Không có gì
-                                        if (!value || value.length === 0) {
-                                            return "Vui lòng chọn ít nhất 1 ảnh";
-                                        }
+                                        if (!value || value.length === 0) return "Vui lòng chọn ít nhất 1 ảnh";
 
-                                        // 2. Validate từng ảnh
                                         for (const item of value) {
-                                            // ảnh cũ
-                                            if (typeof item === "string") continue;
-
-                                            // file mới
-                                            if (item.size > 5 * 1024 * 1024) {
-                                                return "Mỗi ảnh tối đa 5MB";
+                                            // SỬA ĐOẠN NÀY: Check xem có phải là File không
+                                            if (!(item instanceof File)) {
+                                                // Nếu không phải File (tức là Image object cũ), coi như hợp lệ, bỏ qua check size
+                                                continue;
                                             }
 
+                                            // Validate file mới
+                                            if (item.size > 5 * 1024 * 1024) return "Mỗi ảnh tối đa 5MB";
                                             const okTypes = ["image/jpeg", "image/png", "image/webp"];
-                                            if (!okTypes.includes(item.type)) {
-                                                return "Chỉ hỗ trợ JPG/PNG/WEBP";
-                                            }
+                                            if (!okTypes.includes(item.type)) return "Chỉ hỗ trợ JPG/PNG/WEBP";
                                         }
+                                        return true;
 
                                         return true;
                                     },
                                 }}
-                                render={({ field, fieldState }) => (
-                                    <UploadImageBox
-                                        value={field.value || []}
-                                        onChange={field.onChange}
-                                        error={fieldState.error?.message}
-                                        multiple={true}
-                                        width='80px'
-                                        height='80px'
-                                        picker={true}
-                                        message=''
-                                        Icon={<IoAdd size={20} />}
-                                    />
+                                render={({ field, fieldState }) => {
+                                    const previewValues = (field.value || []).map(item => {
+                                        if (item instanceof File) return item;
+                                        // Nếu là Image object { imageUrl, ... } thì trả về imageUrl
+                                        if (typeof item === 'object' && 'imageUrl' in item) return item.imageUrl;
+                                        return item; // Fallback
+                                    });
+                                    return (
+                                        <UploadImageBox
+                                            value={previewValues}
+                                            onChange={field.onChange}
+                                            error={fieldState.error?.message}
+                                            multiple={true}
+                                            width='80px'
+                                            height='80px'
+                                            picker={true}
+                                            message=''
+                                            Icon={<IoAdd size={20} />}
+                                        />
 
-                                )}
+                                    )
+                                }
+                                }
                             />
                             {errors.gallery && <span className='form-message-error'>{errors.gallery?.message}</span>}
                         </div>

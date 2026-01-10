@@ -1,6 +1,6 @@
 import { FormProvider, useForm, useWatch, type SubmitHandler } from "react-hook-form"
-import type { ProductCreateForm, ProductFormUI, SKU, SkuCreateForm } from "../../types/product.type"
-import { data, useNavigate } from "react-router";
+import type { Attribute, ProductCreateForm, ProductFormUI, SKU, SkuCreateForm } from "../../types/product.type"
+import { useNavigate } from "react-router";
 import { RiSaveLine } from "react-icons/ri";
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs";
 import { BsBox } from "react-icons/bs";
@@ -65,6 +65,8 @@ const ProductCreate = () => {
                     image: item.image
                 }))
             }
+            console.log(data.attributes);
+
             const payload: ProductCreateForm = {
                 name: data.name.trim(),
                 slug: data.slug.trim(),
@@ -91,23 +93,16 @@ const ProductCreate = () => {
             fd.append("shortDescription", payload.shortDescription)
             fd.append("warrantyMonth", String(payload.warrantyMonth))
             fd.append("hasVariants", String(payload.hasVariants))
-
-            payload.specs.forEach((spec, index) => {
-                fd.append(`specs[${index}].id`, spec.id)
-                fd.append(`specs[${index}].code`, spec.code)
-                fd.append(`specs[${index}].name`, spec.name)
-                fd.append(`specs[${index}].value`, spec.value)
-                fd.append(`specs[${index}].selected`, JSON.stringify(true))
-                fd.append(`specs[${index}].label`, spec.label)
-                fd.append(`specs[${index}].labelOption`, "test")
-                fd.append(`spec[${index}].unit`, spec.unit)
-            })
+            const specsToSend = prepareSpecs(payload.specs); 
+            console.log({specsToSend});
+            
+            fd.append("specs", JSON.stringify(specsToSend))
             payload.attributes.forEach((at, index) => {
-                fd.append(`attributes[${index}].id`, at.id)
+                fd.append(`attributes[${index}].groupId`, at.id)
                 fd.append(`attributes[${index}].label`, at.name)
                 at.values.forEach((a, indexA) => {
-                    fd.append(`attributes[${index}].values[${indexA}].k`, a.id)
-                    fd.append(`attributes[${index}].values[${indexA}].v`, a.value)
+                    fd.append(`attributes[${index}].values[${indexA}].id`, a.id)
+                    fd.append(`attributes[${index}].values[${indexA}].value`, a.value)
                 })
             })
             fd.append("thumbnail", payload.thumbnail)
@@ -122,9 +117,9 @@ const ProductCreate = () => {
                 fd.append(`skus[${index}].originalPrice`, String(sku.originalPrice));
                 fd.append(`skus[${index}].stock`, String(sku.stock));
                 sku.attributes.forEach((op, indexOp) => {
-                    fd.append(`skus[${index}].specs[${indexOp}].id`, op.id)
-                    fd.append(`skus[${index}].specs[${indexOp}].value`, op.value)
-                    fd.append(`skus[${index}].specs[${indexOp}].groupId`, op.groupId)
+                    fd.append(`skus[${index}].specs[${indexOp}].id`, String(op.id))
+                    fd.append(`skus[${index}].specs[${indexOp}].value`, String(op.value))
+                    fd.append(`skus[${index}].specs[${indexOp}].groupId`, String(op.groupId))
                 })
                 if (sku.image) {
                     fd.append(`skus[${index}].image`, sku.image);
@@ -133,12 +128,40 @@ const ProductCreate = () => {
             const res = await createProduct(fd).unwrap();
             toast.success(res?.message ?? "Tạo sản phẩm thành công");
 
-            // setTimeout(() => navigate("/categories", { replace: true }), 1200);
+            setTimeout(() => navigate("/products", { replace: true }), 1200);
         } catch (error: any) {
             toast.error(error?.data?.message ?? "Có lỗi xảy ra");
         }
 
     }
+    const prepareSpecs = (rawAttributes: Attribute[]) => {
+        return rawAttributes.map(attr => {
+            let finalValue = attr.value;
+
+            // Logic giữ type (Ví dụ minh họa)
+            if (Array.isArray(attr.value)) {
+                // Nếu là mảng ["HDMI", "USB"], giữ nguyên
+                finalValue = attr.value;
+            } else if (attr.value === "true" || attr.value === "false") {
+                // Convert string "true" -> boolean true
+                finalValue = (attr.value === "true");
+            } else if (!isNaN(Number(attr.value)) && attr.value !== "") {
+                // Convert string "12" -> number 12
+                finalValue = Number(attr.value);
+            }
+
+            // Trả về object sạch
+            return {
+                id: attr.id,
+                code: attr.code,
+                label: attr.label,
+                dataType: attr.dataType,
+                unit: attr.dataType,
+                displayOrder: attr.displayOrder,
+                value: finalValue
+            };
+        });
+    };
     return (
         <div className="d-flex align-items-center justify-content-center">
             <div className="border-app--rounded bg-white m-4 py-4" style={{ width: "1000px" }}>
@@ -172,7 +195,7 @@ const ProductCreate = () => {
                 </div>
                 <FormProvider {...methods} >
                     <form id="product-form" className="form-app pt-4" onSubmit={handleSubmit(onSubmit)}>
-                        <fieldset>
+                        <fieldset disabled={isLoading}>
                             <Tabs forceRenderTabPanel>
                                 <TabList className="px-4 tablist">
                                     <Tab>

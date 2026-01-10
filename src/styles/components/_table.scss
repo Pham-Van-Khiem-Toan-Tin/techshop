@@ -5,9 +5,24 @@
   --table-head-bg: rgba(17, 24, 39, 0.02);
   --table-text: var(--app-text);
   --table-muted: var(--app-text-muted);
+  --info: #0ea5e9; /* sky-500 */
+  --info-bg: rgba(14, 165, 233, 0.12);
+  --info-br: rgba(14, 165, 233, 0.28);
+
+  --warning: #f59e0b; /* amber-500 */
+  --warning-bg: rgba(245, 158, 11, 0.14);
+  --warning-br: rgba(245, 158, 11, 0.3);
+
+  --success-bg: rgba(22, 163, 74, 0.12);
+  --success-br: rgba(22, 163, 74, 0.28);
+
+  --danger-br: rgba(239, 68, 68, 0.3);
+
+  --neutral-tag-bg: var(--neutral-100);
+  --neutral-tag-br: var(--neutral-200);
 }
 
-/* Card wrapper giống dashboard */
+
 .table-card {
   background: var(--table-bg);
   border: 1px solid var(--table-border);
@@ -38,6 +53,7 @@
 }
 
 .table-app thead th {
+  
   text-align: left;
   font-weight: 700;
   font-size: 12px;
@@ -59,9 +75,11 @@
     background-color: var(--neutral-100);
     color: var(--neutral-900);
   }
-  
 }
-
+.table-app th,
+.table-app td {
+  white-space: nowrap;
+}
 .table-app tbody tr:hover td {
   background: var(--table-row-hover);
 }
@@ -100,7 +118,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  flex-wrap: wrap; /* nếu nhiều action */
+  flex-wrap: nowrap; /* nếu nhiều action */
 }
 
 /* Small action buttons (neutral outline) */
@@ -227,6 +245,78 @@
           color: #111827;
           border-top: 1px solid #eef2f7 !important;
           vertical-align: middle;
+          .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+
+            padding: 2px 8px;
+            border-radius: 999px;
+
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 18px;
+
+            border: 1px solid var(--neutral-tag-br);
+            background: var(--neutral-tag-bg);
+            color: var(--neutral-800);
+
+            white-space: nowrap;
+          }
+
+          /* Optional: dot indicator */
+          .tag::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: currentColor;
+            opacity: 0.6;
+          }
+
+          /* Variants */
+          .tag--success {
+            background: var(--success-bg);
+            border-color: var(--success-br);
+            color: var(--success);
+          }
+
+          .tag--active {
+            background: var(--active-bg);
+            border-color: rgba(21, 128, 61, 0.28);
+            color: var(--active);
+          }
+
+          .tag--danger {
+            background: var(--danger-50);
+            border-color: var(--danger-br);
+            color: var(--danger);
+          }
+
+          .tag--warning {
+            background: var(--warning-bg);
+            border-color: var(--warning-br);
+            color: var(--warning);
+          }
+
+          .tag--info {
+            background: var(--info-bg);
+            border-color: var(--info-br);
+            color: var(--info);
+          }
+
+          .tag--neutral {
+            background: var(--neutral-100);
+            border-color: var(--neutral-200);
+            color: var(--neutral-700);
+          }
+
+          /* Size option (if needed) */
+          .tag--sm {
+            padding: 1px 6px;
+            font-size: 11px;
+            line-height: 16px;
+          }
         }
         &:hover {
           background: #ffff;
@@ -245,4 +335,40 @@
       }
     }
   }
+}
+.badge {
+  border-radius: 999px;
+  font-weight: 700;
+  padding: 0.35rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  justify-content: center;
+}
+
+/* Nếu dùng Bootstrap bg-* thì vẫn ok, nhưng bạn có thể “đồng bộ” tone nhẹ nhàng: */
+.badge.bg-success {
+  background: var(--success-bg) !important;
+  color: var(--success) !important;
+  border: 1px solid var(--success-br);
+}
+.badge.bg-danger {
+  background: var(--danger-50) !important;
+  color: var(--danger) !important;
+  border: 1px solid var(--danger-br);
+}
+.badge.bg-warning {
+  background: var(--warning-bg) !important;
+  color: var(--warning) !important;
+  border: 1px solid var(--warning-br);
+}
+.badge.bg-info {
+  background: var(--info-bg) !important;
+  color: var(--info) !important;
+  border: 1px solid var(--info-br);
+}
+.badge.bg-secondary {
+  background: var(--neutral-100) !important;
+  color: var(--neutral-700) !important;
+  border: 1px solid var(--neutral-200);
 }

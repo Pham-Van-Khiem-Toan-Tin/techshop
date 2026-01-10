@@ -1,12 +1,47 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQuery } from "../../lib/baseQuery";
 import type { ApiResponse } from "../../types/api.type";
+import type { Page } from "../../types/page.type";
+import type { Product, ProductDetail } from "../../types/product.type";
 
 export const productApi = createApi({
   reducerPath: "productApi",
   baseQuery,
-  tagTypes: ["Products"],
+  tagTypes: ["Products", "Product"],
   endpoints: (builder) => ({
+    getAllProduct: builder.query<
+      Page<Product>,
+      {
+        keyword: string;
+        page: number;
+        size: number;
+        fields: string[];
+        sort: string;
+      }
+    >({
+      query: ({ keyword, page, size, fields, sort }) => ({
+        url: "/api/admin/catalog/products",
+        params: { keyword, page, size, fields, sort },
+      }),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.content.map((p) => ({
+                type: "Products" as const,
+                id: p.id,
+              })),
+              { type: "Products" as const, id: "LIST" },
+            ]
+          : [{ type: "Products" as const, id: "LIST" }],
+      keepUnusedDataFor: 30,
+    }),
+    getProductById: builder.query<ProductDetail, string>({
+      query: (id) => ({
+        url: `/api/admin/catalog/products/${id}`,
+      }),
+      providesTags: (result, error, id) => [{ type: "Product", id }],
+      keepUnusedDataFor: 0,
+    }),
     createProduct: builder.mutation<ApiResponse, FormData>({
       query: (body) => ({
         url: "/api/admin/catalog/products",
@@ -15,9 +50,29 @@ export const productApi = createApi({
       }),
       invalidatesTags: [{ type: "Products", id: "LIST" }],
     }),
+    updateProduct: builder.mutation<ApiResponse, { id: string , body: FormData}>({
+      query: ({id, body}) => ({
+        url: `/api/admin/catalog/products${id}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: [{ type: "Products", id: "LIST" }],
+    }),
+    deleteProduct: builder.mutation<ApiResponse, string>({
+      query: (id) => ({
+        url: `/api/admin/catalog/products/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [{ type: "Products", id: "LIST" }],
+    }),
   }),
   refetchOnFocus: true,
   refetchOnReconnect: true,
 });
 
-export const { useCreateProductMutation } = productApi;
+export const { 
+  useGetAllProductQuery,
+  useUpdateProductMutation,
+  useGetProductByIdQuery,
+  useDeleteProductMutation,
+  useCreateProductMutation } = productApi;

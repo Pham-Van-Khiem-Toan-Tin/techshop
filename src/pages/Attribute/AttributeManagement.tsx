@@ -16,8 +16,13 @@ import type { Page } from "../../types/page.type";
 import { Link, useNavigate } from 'react-router';
 import { toast } from "react-toastify";
 import { Modal } from "react-bootstrap";
-import { useDeleteAttributeMutation, useGetAttributesQuery } from "../../features/attribute/attribute.api";
+import { useChangeActiveOfAttributeMutation, useDeleteAttributeMutation, useGetAttributesQuery, useRevokeAttributeMutation } from "../../features/attribute/attribute.api";
 import type { Attribute } from "../../types/attribute.type";
+import { MdOutlineAutoDelete } from "react-icons/md";
+import { PiEyeSlashThin, PiEyeThin } from "react-icons/pi";
+import { HiOutlineLockClosed, HiOutlineLockOpen } from "react-icons/hi2";
+import { useAppSelector } from "../../store/hook";
+import { TbArrowBackUpDouble } from "react-icons/tb";
 const SIZE_OPTIONS = [10, 25, 50, 100] as const;
 const DEFAULT_SIZE = 10;
 const normalizeSize = (raw: number) =>
@@ -35,6 +40,16 @@ const SORT_OPTIONS: Option[] = [
   { value: "label:asc", label: "Tên hiển thị A→Z" },
   { value: "label:desc", label: "Tên hiển thị Z→A" },
 ];
+
+const DATA_TYPE_LABEL = {
+  TEXT: "Văn bản",
+  NUMBER: "Số",
+  BOOLEAN: "Bật/Tắt",
+  SELECT: "Lựa chọn đơn",
+  MULTI_SELECT: "Lựa chọn nhiều",
+  DATE: "Chọn thời gian",
+} as const;
+type DataTypeKey = keyof typeof DATA_TYPE_LABEL;
 const AttributeManagement = () => {
   const [query, setQuery] = useQueryStates({
     page: parseAsInteger.withDefault(1), // UI 1-based
@@ -79,26 +94,51 @@ const AttributeManagement = () => {
   }, { refetchOnFocus: true, refetchOnReconnect: true })
   const rows: Attribute[] = data?.content ?? [];
   console.log(data?.content);
-  
+
   const totalPages = Math.max(
     1,
     Math.ceil(((data as Page<Attribute>)?.total ?? 0) / size)
   );
+  const [changeActive, { isLoading: isLoadingActive }] = useChangeActiveOfAttributeMutation();
   useEffect(() => {
     if (uiPage > totalPages) setQuery({ page: totalPages });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalPages]);
+  const getStatusClass = (active: boolean, deleted: boolean) => {
+    let statusBadge: React.ReactNode;
+    if (deleted) {
+      statusBadge = (
+        <div className="badge bg-secondary">
+          <MdOutlineAutoDelete />
+          <span>Đã xóa</span>
+        </div>
+      );
+    } else if (active) {
+      statusBadge = (
+        <div className="badge bg-success">
+          <PiEyeThin />
+          <span>Hoạt động</span>
+        </div>
+      );
+    } else {
+      statusBadge = (
+        <div className="badge bg-danger">
+          <PiEyeSlashThin />
+          <span>Vô hiệu hóa</span>
+        </div>
+      );
+    }
+    return statusBadge;
+  };
   const columns = useMemo<Column<Attribute>[]>(() =>
     [
       { key: "code", title: "Mã (CODE)", strong: true, render: (r) => r.code },
       { key: "label", title: "Tên hiển thị", muted: true, render: (r) => r.label },
-      { key: "dataType", title: "Kiểu dữ liệu", muted: true, render: (r) => r.dataType },
-      {key: "status", title: "Trạng thái", muted: true, render: (r) => (
-                    <span className={`status status--sm ${r.active ? "status--active" : "status--inactive"}`}>
-                        {r.active ? "Hoạt động" : "Vô hiệu hóa"}
-                    </span>)}
+      { key: "dataType", title: "Kiểu dữ liệu", muted: true, render: (r) => DATA_TYPE_LABEL[r.dataType as DataTypeKey] ?? "" },
+      { key: "status", title: "Trạng thái", muted: true, render: (r) => getStatusClass(r.active, r.deleted) },
     ]
     , []);
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const toggleRow = (id: string) => {
     setSelectedIds((prev) =>
@@ -139,7 +179,7 @@ const AttributeManagement = () => {
   };
   const [deleteAttribute, { isLoading: isDeleting }] =
     useDeleteAttributeMutation();
-
+  const [revokeAttribute, { isLoading: isRevoking }] = useRevokeAttributeMutation();
   const handleConfirmDelete = async () => {
     if (!deleteTarget?.id) return;
 
@@ -153,16 +193,16 @@ const AttributeManagement = () => {
       toast.error(err?.data?.message ?? "Có lỗi xảy ra khi xoá");
     }
   };
+  const { user } = useAppSelector((state) => state.auth)
   return (
-    <div className="container-fluid py-3 d-grid gap-3">
+    <div className="container-fluid py-3 gap-3 d-flex flex-column">
       {/* Search */}
-      <div className="table-card">
-        <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap">
-          <div className="table-card__title form-app mb-0 d-flex flex-row align-items-center gap-2 flex-wrap">
-            {/* keyword */}
+      <div className="border-app rounded p-2 bg-white">
+        <div className="form-app mb-0 d-flex flex-row align-items-center gap-2 flex-wrap">
+          {/* keyword */}
+          <div>
             <input
               className="form-control form-control-sm"
-              style={{ width: 280 }}
               placeholder="Tìm kiếm quyền..."
               value={keywordInput}
               onChange={(e) => setKeywordInput(e.target.value)}
@@ -170,59 +210,76 @@ const AttributeManagement = () => {
                 if (e.key === "Enter") applySearch();
               }}
             />
-            <button
-              className="btn-app btn-app--sm btn-app--default"
-              onClick={applySearch}
-              disabled={!hasPendingChanges}
-              title={!hasPendingChanges ? "Không có thay đổi" : "Áp dụng tìm kiếm"}
-            >
-              Tìm kiếm
-            </button>
 
-            {/* multi filter: field */}
-            <div style={{ minWidth: 260 }}>
-              <Select
-                isMulti
-                placeholder="Tìm theo trường..."
-                options={FIELD_OPTIONS}
-                value={fieldValue}
-                onChange={(vals) => {
-                  const next = (vals as Option[]).map((v) => v.value);
-                  setFieldDraft(next); // ✅ chỉ đổi draft
-                }}
-                components={{
-                  DropdownIndicator: FilterIndicator,
-                  IndicatorSeparator: null,
-                }}
-              />
-            </div>
-
-            {/* sort */}
-            <div style={{ minWidth: 220 }}>
-              <Select
-                placeholder="Sắp xếp..."
-                options={SORT_OPTIONS}
-                value={sortValue}
-                onChange={(val) => {
-                  const v = (val as Option | null)?.value ?? "id:asc";
-                  setSortDraft(v);
-                }}
-                components={{
-                  DropdownIndicator: SortIndicator,
-                  IndicatorSeparator: null,
-                }}
-              />
-            </div>
           </div>
-
-          <div className="d-flex align-items-center gap-2">
-            <Link to="create" className="btn-app btn-app--sm btn-app--default">
-              Thêm thuộc tính
-            </Link>
+          {/* multi filter: field */}
+          <div>
+            <Select
+              isMulti
+              placeholder="Tìm theo trường..."
+              options={FIELD_OPTIONS}
+              value={fieldValue}
+              onChange={(vals) => {
+                const next = (vals as Option[]).map((v) => v.value);
+                setFieldDraft(next); // ✅ chỉ đổi draft
+              }}
+              styles={{
+                control: (base, props) => ({
+                  ...base,
+                  minHeight: 34,
+                  height: 34
+                }),
+              }}
+              components={{
+                DropdownIndicator: FilterIndicator,
+                IndicatorSeparator: null,
+              }}
+            />
+          </div>
+          {/* sort */}
+          <div style={{ minWidth: 220 }}>
+            <Select
+              placeholder="Sắp xếp..."
+              options={SORT_OPTIONS}
+              value={sortValue}
+              styles={{
+                control: (base, props) => ({
+                  ...base,
+                  minHeight: 34,
+                  height: 34
+                }),
+              }}
+              onChange={(val) => {
+                const v = (val as Option | null)?.value ?? "id:asc";
+                setSortDraft(v);
+              }}
+              components={{
+                DropdownIndicator: SortIndicator,
+                IndicatorSeparator: null,
+              }}
+            />
           </div>
         </div>
+        <div className="d-flex mt-3 align-items-center justify-content-between flex-wrap">
+          <button
+            className="btn-app btn-app--sm btn-app--default"
+            onClick={applySearch}
+            disabled={!hasPendingChanges}
+            title={!hasPendingChanges ? "Không có thay đổi" : "Áp dụng tìm kiếm"}
+          >
+            Tìm kiếm
+          </button>
+          {
+            user?.permissions.includes("CREATE_ATTRIBUTE") && (
+              <div className="d-flex align-items-center gap-2">
+                <Link to="create" className="btn-app btn-app--sm btn-app--default">
+                  Thêm thuộc tính
+                </Link>
+              </div>
+            )
+          }
+        </div>
       </div>
-
       {/* Table */}
       <DataTable<Attribute>
         title="Danh sách thuộc tính"
@@ -243,14 +300,25 @@ const AttributeManagement = () => {
           width: 320,
           title: "Thao tác",
           items: [
-            { key: "view", label: <RiEyeLine />, onClick: (r) => navigate(`view/${r.id}`) },
-            { key: "edit", label: <RiEditLine />, onClick: (r) => navigate(`edit/${r.id}`) },
+            { key: "view", visible: () => user?.permissions.includes("VIEW_ATTRIBUTE") ?? false, label: <RiEyeLine />, onClick: (r) => navigate(`view/${r.id}`) },
+            { key: "edit", visible: () => user?.permissions.includes("EDIT_ATTRIBUTE") ?? false, label: <RiEditLine />, onClick: (r) => navigate(`edit/${r.id}`) },
+            { key: "backup", visible: (r) => r.deleted, label: <TbArrowBackUpDouble />, onClick: (r) => revokeAttribute(r.id) },
+            {
+              key: "lock",
+              visible: () => user?.permissions.includes("EDIT_ATTRIBUTE") ?? false,
+              labelOption: (r) => {
+                if (r.active) return <HiOutlineLockClosed />
+                return <HiOutlineLockOpen />
+              },
+              onClick: (r) => changeActive(r.id)
+            },
             {
               key: "delete",
               label: <RiDeleteBin6Line />,
+              visible: () => user?.permissions.includes("DELETE_ATTRIBUTE") ?? false,
               tone: "danger",
               onClick: (r) => {
-               openDelete(r) 
+                openDelete(r)
               },
             },
           ],
@@ -304,7 +372,7 @@ const AttributeManagement = () => {
         </Modal.Header>
 
         <Modal.Body>
-          <div className="mb-2">Bạn có chắc chắn muốn xoá quyền:</div>
+          <div className="mb-2">Bạn có chắc chắn muốn xoá thuộc tính:</div>
 
           <div
             className="p-3 rounded"
@@ -313,7 +381,7 @@ const AttributeManagement = () => {
               border: "1px solid var(--app-border)",
             }}
           >
-            <div className="fw-semibold">{deleteTarget?.name}</div>
+            <div className="fw-semibold">{deleteTarget?.label}</div>
             <div className="text-muted" style={{ color: "var(--app-text-muted)" }}>
               ID: {deleteTarget?.id}
             </div>

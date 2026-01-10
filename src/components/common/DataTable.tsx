@@ -86,7 +86,7 @@ export default function DataTable<T>({
                                 if (a.visible && !a.visible(row)) return null;
 
                                 const isDisabled = a.disabled?.(row) ?? false;
-
+                                const labelNode = a.labelOption ? a.labelOption(row) : a.label;
                                 return (
                                     <button
                                         key={a.key}
@@ -95,7 +95,7 @@ export default function DataTable<T>({
                                         disabled={isDisabled}
                                         onClick={() => a.onClick(row)}
                                     >
-                                        {a.label}
+                                        {labelNode}
                                     </button>
                                 );
                             })}

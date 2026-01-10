@@ -1,23 +1,16 @@
 
-export type AttributeRawValue =
-  | { type: "TEXT"; value: string }
-  | { type: "NUMBER"; value: number | null }
-  | { type: "DATE"; value: string | null }       // ISO string
-  | { type: "BOOLEAN"; value: boolean }
-  | { type: "SELECT"; value: string | null }
-  | { type: "MULTIPLE_SELECT"; value: string[] };
 export interface Attribute {
   id: string;
   code: string;
   dataType: DataType;
-  name: string;
-  displayOrder: number;
   label: string;
+  displayOrder: number;
   unit: string;
-  raw: AttributeRawValue;
+  value: string | number | boolean | Options[] | Options | null;
 }
 
 export interface Options {
+  id: string;
   value: string;
   label: string;
 }
@@ -27,7 +20,7 @@ export type DataType =
   | "DATE"
   | "BOOLEAN"
   | "SELECT"
-  | "MULTIPLE_SELECT";
+  | "MULTI_SELECT";
 export interface AttributeOptions {
   id: string;
   code: string;
@@ -78,8 +71,8 @@ export interface ProductFormUI {
     costPrice: number;
     stock: number;
   };
-  image: File | null | string;
-  gallery: (File | string)[] | null;
+  image: File | null | string | Image;
+  gallery: (File | string | Image)[] | null;
   attributes: Attribute[];
   skus: SKU[];
   attributeOptions: AttributeOptions[];
@@ -130,4 +123,82 @@ export interface ProductCreateForm {
   thumbnail: File;
   gallery: File[];
   skus: SkuCreateForm[];
+}
+
+
+export interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  brand: {
+    id: string;
+    name: string;
+  }
+  category: {
+    id: string;
+    name: string;
+  }
+  status: string;
+}
+
+export interface Image {
+  imageUrl: string,
+  imagePublicId: string
+}
+export interface SkuDetail {
+  id: string;
+  spuId: string;
+  skuCode: string;
+  name: string;
+  price: number;
+  originalPrice: number;
+  costPrice: number;
+  image: Image;
+  active: boolean;
+  discontinued: boolean;
+  discontinuedReason: string;
+  stock: number;
+  soldCount: number;
+  selections: SkuSelect[]
+}
+export interface SkuSelect {
+  code: string;
+  valueId: string;
+}
+export interface ProductDetail {
+  name: string;
+  slug: string;
+  category: {
+    id: string,
+    name: string
+  }
+  brand: {
+    id: string,
+    name: string
+  }
+  description: string;
+  shortDescription: string;
+  thumbnail: Image;
+  gallery: Image[];
+  status: string;
+  avgRating: number;
+  numOfReviews: number;
+  minPrice: number;
+  maxPrice: number;
+  hasVariants: boolean;
+  variantGroups: VariantGroup[],
+  specs: Attribute[]
+  skus: SkuDetail[]
+}
+
+export interface OptionItem {
+  id: string,
+  value: string,
+  active: boolean,
+  deprecated: boolean
+}
+export interface VariantGroup {
+  groupId: string,
+  label: string,
+  values: OptionItem[]
 }

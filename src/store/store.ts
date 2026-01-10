@@ -7,6 +7,8 @@ import { categoryApi } from "../features/category/category.api";
 import { attributeApi } from "../features/attribute/attribute.api";
 import { brandApi } from "../features/brand/brand.api";
 import { productApi } from "../features/product/product.api";
+import { orderApi } from "../features/order/order.api";
+import { orderStatsApi } from "../features/order/order-stats.api";
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +20,8 @@ export const store = configureStore({
     [attributeApi.reducerPath]: attributeApi.reducer,
     [brandApi.reducerPath]: brandApi.reducer,
     [productApi.reducerPath]: productApi.reducer,
+    [orderApi.reducerPath]: orderApi.reducer,
+    [orderStatsApi.reducerPath]: orderStatsApi.reducer,
   },
   middleware: (gDf) =>
     gDf().concat(
@@ -27,7 +31,9 @@ export const store = configureStore({
       categoryApi.middleware,
       attributeApi.middleware,
       brandApi.middleware,
-      productApi.middleware
+      productApi.middleware,
+      orderApi.middleware,
+      orderStatsApi.middleware,
     ),
 });
 

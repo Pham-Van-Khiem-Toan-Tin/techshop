@@ -48,13 +48,16 @@ export const attributeApi = createApi({
       providesTags: (result, error, id) => [{ type: "Attribute", id }],
       keepUnusedDataFor: 0,
     }),
-    getAttributeOptions: builder.mutation<AttributeDetail[], AttributeOptionForm>({
+    getAttributeOptions: builder.mutation<
+      AttributeDetail[],
+      AttributeOptionForm
+    >({
       query: (body) => ({
         url: "/api/admin/catalog/attributes/options",
         method: "POST",
-        body
+        body,
       }),
-      invalidatesTags: [{type: "Attribute_Options", id: "LIST"}]
+      invalidatesTags: [{ type: "Attribute_Options", id: "LIST" }],
     }),
     createAttribute: builder.mutation<ApiResponse, AttributeCreateForm>({
       query: (body) => ({
@@ -64,13 +67,38 @@ export const attributeApi = createApi({
       }),
       invalidatesTags: [{ type: "Attributes", id: "LIST" }],
     }),
-    editAttribute: builder.mutation<ApiResponse, {id: string, body: AttributeEditForm}>({
-      query: ({id, body}) => ({
+    editAttribute: builder.mutation<
+      ApiResponse,
+      { id: string; body: AttributeEditForm }
+    >({
+      query: ({ id, body }) => ({
         url: `/api/admin/catalog/attributes/${id}`,
         method: "PUT",
         body,
       }),
       invalidatesTags: [{ type: "Attributes", id: "LIST" }],
+    }),
+    changeActiveOfAttribute: builder.mutation<ApiResponse, string>({
+      query: (id) => ({
+        url: `/api/admin/catalog/attributes/${id}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: [{ type: "Attributes", id: "LIST" }],
+    }),
+    revokeAttribute: builder.mutation<ApiResponse, string>({
+      query: (id) => ({
+        url: `/api/admin/catalog/attributes/revoke/${id}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: [{ type: "Attributes", id: "LIST" }],
+    }),
+    revokeAttributeOption: builder.mutation<ApiResponse, {attributeId: string, optionId: string}>({
+      query: ({attributeId, optionId}) => ({
+        url: `/api/admin/catalog/attributes/revoke-option/${attributeId}`,
+        method: "PATCH",
+        body: {attributeId, optionId}
+      }),
+      invalidatesTags: (result, error, { attributeId }) => [{ type: "Attribute", id: attributeId }],
     }),
     deleteAttribute: builder.mutation<ApiResponse, string>({
       query: (id) => ({
@@ -91,5 +119,8 @@ export const {
   useCreateAttributeMutation,
   useDeleteAttributeMutation,
   useGetAttributeByIdQuery,
-  useGetAttributeOptionsMutation
+  useGetAttributeOptionsMutation,
+  useChangeActiveOfAttributeMutation,
+  useRevokeAttributeMutation,
+  useRevokeAttributeOptionMutation
 } = attributeApi;

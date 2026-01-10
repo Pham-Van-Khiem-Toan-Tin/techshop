@@ -2,7 +2,20 @@ import { useParams, useNavigate, Link } from "react-router";
 import { RiEditLine } from "react-icons/ri";
 import { useGetAttributeByIdQuery } from "../../features/attribute/attribute.api";
 import type { AttributeDetail } from "../../types/attribute.type";
-import type { Option } from "../../types/select.type";
+import { PiEyeSlashThin, PiEyeThin } from "react-icons/pi";
+import { MdOutlineAutoDelete } from "react-icons/md";
+
+
+
+const DATA_TYPE_LABEL = {
+  TEXT: "Văn bản",
+  NUMBER: "Số",
+  BOOLEAN: "Bật/Tắt",
+  SELECT: "Lựa chọn đơn",
+  MULTI_SELECT: "Lựa chọn nhiều",
+  DATE: "Chọn thời gian",
+} as const;
+type DataTypeKey = keyof typeof DATA_TYPE_LABEL;
 
 const AttributeDetail = () => {
   const navigate = useNavigate();
@@ -14,17 +27,85 @@ const AttributeDetail = () => {
       refetchOnFocus: true,
       refetchOnReconnect: true,
     });
-
   if (isLoading) {
     return (
       <div className="d-flex justify-content-center mt-5">
-        <div className="border-app--rounded bg-white p-4" style={{ width: 700 }}>
-          Đang tải…
+        <div
+          className="border-app--rounded bg-white p-4"
+          style={{ width: 700 }}
+        >
+          {/* Header */}
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <div className="placeholder col-6 mb-2"></div>
+              <div className="placeholder col-9"></div>
+            </div>
+            <div className="d-flex gap-2">
+              <span className="btn-app btn-app--sm btn-app--ghost disabled placeholder col-4"></span>
+              <span className="btn-app btn-app--sm btn-app--default disabled placeholder col-3"></span>
+            </div>
+          </div>
+
+          {/* Form fields */}
+          <div className="row gy-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div className="col-6" key={i}>
+                <div className="placeholder col-4 mb-1"></div>
+                <div className="placeholder col-12" style={{ height: 32 }}></div>
+              </div>
+            ))}
+
+            <div className="col-12">
+              <div className="placeholder col-3 mb-1"></div>
+              <div className="placeholder col-4" style={{ height: 34 }}></div>
+            </div>
+
+            {/* Table placeholder */}
+            <div className="col-12 mt-3">
+              <div className="placeholder col-5 mb-2"></div>
+              <div className="border rounded p-3">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="d-flex justify-content-between mb-3"
+                  >
+                    <div className="placeholder col-6"></div>
+                    <div className="placeholder col-3"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
-
+  const getStatusClass = (active: boolean, deprecated: boolean) => {
+    let statusBadge: React.ReactNode;
+    if (deprecated) {
+      statusBadge = (
+        <div className="badge bg-secondary">
+          <MdOutlineAutoDelete />
+          <span>Đã xóa</span>
+        </div>
+      );
+    } else if (active) {
+      statusBadge = (
+        <div className="badge bg-success">
+          <PiEyeThin />
+          <span>Hoạt động</span>
+        </div>
+      );
+    } else {
+      statusBadge = (
+        <div className="badge bg-danger">
+          <PiEyeSlashThin />
+          <span>Vô hiệu hóa</span>
+        </div>
+      );
+    }
+    return statusBadge;
+  };
   if (isError || !data) {
     return (
       <div className="d-flex justify-content-center mt-5">
@@ -37,10 +118,6 @@ const AttributeDetail = () => {
   const isSelect = data.dataType === "SELECT" || data.dataType === "MULTI_SELECT";
 
   // đổi key theo BE của bạn
-  const options: Option[] =
-    (data as AttributeDetail)?.options ??
-    (data as AttributeDetail)?.options ??
-    [];
   return (
     <div className="d-flex justify-content-center mt-5">
       <div className="border-app--rounded bg-white" style={{ width: 700 }}>
@@ -79,54 +156,64 @@ const AttributeDetail = () => {
                 <label className="form-label">
                   Tên hiển thị <span className="text-danger">*</span>
                 </label>
-                <input
-                  className="form-control form-control-sm"
-                  value={data.label ?? ""}
-                  readOnly
-                />
+                <span
+                  className="form-control bg-light form-control-sm d-inline-flex align-items-center"
+                >
+                  {data.label ?? ""}
+                </span>
               </div>
 
               <div className="col-6">
                 <label className="form-label">
                   Mã (CODE) <span className="text-danger">*</span>
                 </label>
-                <input
-                  className="form-control form-control-sm"
-                  value={data.code ?? ""}
-                  readOnly
-                />
+                <span
+                  className="form-control bg-light form-control-sm d-inline-flex align-items-center"
+                >
+                  {data.code ?? ""}
+                </span>
               </div>
-
-              <div className="col-6">
-                <label className="form-label">
-                  Đơn vị
-                  {data.dataType === "NUMBER" && (
-                    <span className="text-danger"> *</span>
-                  )}
-                </label>
-                <input
-                  className="form-control form-control-sm"
-                  value={
-                    data.dataType === "NUMBER" ? (data as any)?.unit ?? "" : ""
-                  }
-                  readOnly
-                />
-              </div>
+              {data?.unit && (
+                <div className="col-6">
+                  <label className="form-label">
+                    Đơn vị
+                    {data.dataType === "NUMBER" && (
+                      <span className="text-danger"> *</span>
+                    )}
+                  </label>
+                  <span className="form-control bg-light form-control-sm d-inline-flex align-items-center">
+                    {data.dataType === "NUMBER" ? data?.unit ?? "" : ""}
+                  </span>
+                </div>
+              )}
 
               <div className="col-6">
                 <label className="form-label">
                   Kiểu dữ liệu <span className="text-danger">*</span>
                 </label>
-                <input
-                  className="form-control form-control-sm"
-                  value={data.dataType ?? ""}
-                  readOnly
-                />
+                <span
+                  className="form-control bg-light form-control-sm d-inline-flex align-items-center"
+                >{DATA_TYPE_LABEL[data.dataType as DataTypeKey] ?? ""}</span>
               </div>
-
+              <div className="col-12 d-flex align-items-end">
+                <button disabled className={`d-flex align-items-center gap-2 btn-app ${data?.active ? "btn-app--active" : "btn-app--destructive"}`} type="button">
+                  {data?.active ? (
+                    <>
+                      <PiEyeThin size={20} />
+                      <span>Hoạt động</span>
+                    </>
+                  ) : (
+                    <>
+                      <PiEyeSlashThin size={20} />
+                      <span>Vô hiệu hóa</span>
+                    </>
+                  )}
+                </button>
+              </div>
               <div className="col-12" hidden>
                 <label className="form-label">ID</label>
                 <input
+                  style={{ verticalAlign: "middle" }}
                   className="form-control form-control-sm"
                   value={data.id ?? ""}
                   readOnly
@@ -139,43 +226,45 @@ const AttributeDetail = () => {
                   <label className="form-label">
                     Danh sách lựa chọn <span className="text-danger">*</span>
                   </label>
-
-                  <table className="table table-sm align-middle">
-                    <thead>
-                      <tr>
-                        <th style={{ width: "40%" }}>Value</th>
-                        <th style={{ width: "60%" }}>Label</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {options.length === 0 ? (
+                  <div className=" table-responsive rounded">
+                    <table className="table-app table-sm align-middle">
+                      <colgroup>
+                        <col style={{ width: "10%" }} />
+                        <col style={{ width: "50%" }} />
+                        <col style={{ width: "40%" }} />
+                      </colgroup>
+                      <thead>
                         <tr>
-                          <td colSpan={2} className="text-muted">
-                            Không có lựa chọn nào.
-                          </td>
+                          <th scope="col">STT</th>
+                          <th scope="col" className="ps-2">Giá trị</th>
+                          <th scope="col" className="ps-2">Trạng thái</th>
                         </tr>
-                      ) : (
-                        options.map((opt, idx) => (
-                          <tr key={idx}>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={opt.value}
-                                readOnly
-                              />
-                            </td>
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={opt.label}
-                                readOnly
-                              />
+                      </thead>
+                      <tbody>
+                        {data?.options.length === 0 ? (
+                          <tr>
+                            <td colSpan={2} className="text-muted">
+                              Không có lựa chọn nào.
                             </td>
                           </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                        ) : (
+                          data?.options.map((opt) => (
+                            <tr key={opt?.id}>
+                              <td>
+                                <span>{opt.displayOrder + 1}</span>
+                              </td>
+                              <td>
+                                <span className="f-caption">{opt.label}</span>
+                              </td>
+                              <td>
+                                {getStatusClass(opt.active, !!opt.deprecated)}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
