@@ -34,6 +34,8 @@ import SortableAttributeItem from "./SortableAttributeItem";
 import { Modal } from "react-bootstrap";
 import UploadImageBox from "../../components/common/UploadImageBox";
 import { FiUpload } from "react-icons/fi";
+import { PiEyeSlashThin, PiEyeThin } from "react-icons/pi";
+import { slugify } from "../../utils/string";
 
 type ParentSelectOption = { value: string; label: string };
 
@@ -62,6 +64,7 @@ const CategoryEdit = () => {
     setError,
     getValues,
     reset,
+    watch,
     formState: { errors },
   } = methods;
 
@@ -116,7 +119,8 @@ const CategoryEdit = () => {
 
   // ===== image preview (hiện ảnh hiện tại) =====
   const [serverImageUrl, setServerImageUrl] = useState<string>("");
-
+  const [slugAuto, setSlugAuto] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
   // ===== fill form from API =====
   useEffect(() => {
     if (!detail) return;
@@ -156,8 +160,12 @@ const CategoryEdit = () => {
             })),
           })) ?? [],
       },
-      { keepDirty: false }
+      { keepDirty: false, keepTouched: false }
     );
+    const autoSlug = slugify(d.name ?? "") === (d.slug ?? "");
+    setSlugAuto(autoSlug);
+
+    setHydrated(true);
   }, [detail, reset]);
 
   // ===== attribute search (giống create) =====
@@ -213,8 +221,22 @@ const CategoryEdit = () => {
       optionsValue: opt.optionsValue,
     });
   };
-
+  const name = watch("name");
+  const slug = watch("slug");
   // ===== DnD (giống create) =====
+  useEffect(() => {
+    if (!hydrated) return;     // ⭐ chặn lần đầu load
+    if (!slugAuto) return;
+
+    const next = slugify(name || "");
+    if (next === slug) return;
+
+    setValue("slug", next, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+  }, [name, slug, slugAuto, hydrated, setValue]);
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 0 },
@@ -336,8 +358,8 @@ const CategoryEdit = () => {
   const sortedFields = [...fields].sort(
     (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0)
   );
-  console.log({sortedFields});
-  
+  console.log({ sortedFields });
+  const active = watch("active")
   return (
     <div className="border-app--rounded bg-white m-4 py-4 position-relative">
       {/* Header */}
@@ -403,7 +425,10 @@ const CategoryEdit = () => {
                       <input
                         className="form-control form-control-sm"
                         placeholder="Ví dụ: dien-thoai"
-                        {...register("slug", { required: "Slug không được để trống." })}
+                        {...register("slug", {
+                          required: "Slug không được để trống.",
+                          onChange: () => setSlugAuto(false),
+                        })}
                       />
                       {errors.slug && <span className="form-message-error">{errors.slug.message}</span>}
                     </div>
@@ -445,7 +470,7 @@ const CategoryEdit = () => {
                       />
                     </div>
 
-                    <div>
+                    <div className="col-12 col-md-6">
                       <label className="form-label">
                         Biểu tượng: <span className="text-danger">*</span>
                       </label>
@@ -535,37 +560,24 @@ const CategoryEdit = () => {
                       </div>
 
                       <div>
-                        <label className="form-label">Hiển thị</label>
-                        <Controller
-                          name="active"
-                          control={control}
-                          rules={{ required: { value: true, message: "Trạng thái không được để trống" } }}
-                          render={({ field }) => (
-                            <Select
-                              options={[
-                                { value: true, label: "Có" },
-                                { value: false, label: "Không" },
-                              ]}
-                              value={BOOL_OPTIONS.find((x) => x.value === field.value) ?? BOOL_OPTIONS[0]}
-                              onChange={(v) => field.onChange((v as any)?.value ?? true)}
-                              isSearchable={false}
-                              isDisabled={isBusy}
-                              components={{ DropdownIndicator: null, IndicatorSeparator: null }}
-                              styles={{
-                                ...selectStyles,
-                                control: (base: any) => ({ ...base, minHeight: 34 }),
-                                valueContainer: (base: any) => ({ ...base, paddingTop: 0, paddingBottom: 0 }),
-                                indicatorsContainer: (base: any) => ({ ...base, height: 34 }),
-                              }}
-                            />
+                        <button className={`d-flex align-items-center gap-2 btn-app ${active ? "btn-app--active" : "btn-app--destructive"}`} type="button" onClick={() => setValue("active", !active)}>
+                          {active ? (
+                            <>
+                              <PiEyeThin size={20} />
+                              <span>Hoạt động</span>
+                            </>
+                          ) : (
+                            <>
+                              <PiEyeSlashThin size={20} />
+                              <span>Vô hiệu hóa</span>
+                            </>
                           )}
-                        />
+                        </button>
                         {errors.active && <span className="form-message-error">{errors.active.message}</span>}
                       </div>
                     </div>
                   </div>
 
-                  <div className="my-4 border-top" />
                 </div>
               </TabPanel>
 

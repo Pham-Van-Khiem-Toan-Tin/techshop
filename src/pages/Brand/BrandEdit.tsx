@@ -11,6 +11,7 @@ import { useGetLeafCategoryQuery } from '../../features/category/category.api'
 import type { CategoryOption } from '../../types/category.type'
 import { PiEyeLight, PiEyeSlash } from 'react-icons/pi'
 import { FiUpload } from 'react-icons/fi'
+import { slugify } from '../../utils/string'
 
 
 const optionsStatus: Record<StatusKey, {
@@ -51,6 +52,8 @@ const BrandEdit = () => {
     refetchOnFocus: true,
     refetchOnReconnect: true,
   })
+  const [slugAuto, setSlugAuto] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
     if (!brandData) return;
     reset({
@@ -62,6 +65,10 @@ const BrandEdit = () => {
       logo: brandData.logo.imageUrl,
       categories: brandData.categories.map(item => item.id)
     })
+    const autoSlug = slugify(brandData.name ?? "") === (brandData.slug ?? "");
+    setSlugAuto(autoSlug);
+
+    setHydrated(true);
   }, [brandData, reset])
 
   const dataCategories = watch("categories");
@@ -97,6 +104,22 @@ const BrandEdit = () => {
       setOptions(filtered);
     }
   }
+  const name = watch("name");
+  const slug = watch("slug");
+  // ===== DnD (giống create) =====
+  useEffect(() => {
+    if (!hydrated) return;     // ⭐ chặn lần đầu load
+    if (!slugAuto) return;
+
+    const next = slugify(name || "");
+    if (next === slug) return;
+
+    setValue("slug", next, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+  }, [name, slug, slugAuto, hydrated, setValue]);
   return (
     <div className='d-flex justify-content-center mt-5'>
       <div className="border-app--rounded bg-white" style={{ width: "900px" }}>
@@ -133,7 +156,8 @@ const BrandEdit = () => {
                     required: {
                       value: true,
                       message: "Slug được để trống."
-                    }
+                    },
+                    onChange: () => setSlugAuto(false),
                   })} disabled={isUpdating} type="text" id='slug' className='form-control form-control-sm' placeholder='e.g. Apple' />
                   {errors.slug && <span className='form-message-error'>{errors.slug?.message}</span>}
                 </div>

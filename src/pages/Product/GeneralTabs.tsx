@@ -203,18 +203,11 @@ const GeneralTabs = () => {
                                             try {
                                                 const res = await getCategoryDetail(categoryId);
                                                 const { data } = res;
-                                                console.log(data);
                                                 setValue("category", {
                                                     id: data?.id ?? "",
                                                     name: data?.name ?? "",
                                                     slug: data?.slug ?? ""
                                                 })
-                                                setValue("skuOptions", [{
-                                                    id: crypto.randomUUID(),
-                                                    name: "",
-                                                    value: "",
-                                                    values: []
-                                                }])
                                                 setValue("attributeOptions", (data?.attributeConfigs ?? []).map(item => {
                                                     const dt = toDataType(item.dataType);
                                                     return {
@@ -411,13 +404,17 @@ const GeneralTabs = () => {
                                 <div className='pt-2 d-flex flex-column align-items-start gap-2'>
                                     <span>Sản phẩm có nhiểu biến thể vui lòng chọn nút bên dưới</span>
                                     <button onClick={() => {
-                                        if (category && category.id) {
+                                        if (category?.id) {
                                             setValue("hasVariants", true)
                                             setValue("bulk", {
-                                                price: getValues("price"),
-                                                originalPrice: getValues("originalPrice"),
-                                                costPrice: getValues("costPrice"),
-                                                stock: getValues("stock")
+                                                price: getValues("price") ?? 0,
+                                                originalPrice: getValues("originalPrice") ?? 0,
+                                                costPrice: getValues("costPrice") ?? 0,
+                                                stock: getValues("stock") ?? 0
+                                            })
+                                            setValue("draft", {
+                                                name: "",
+                                                value: "",
                                             })
                                         } else {
                                             toast.error("Vui lòng chọn danh mục trước khi tạo biến thể.")

@@ -42,11 +42,14 @@ export const productApi = createApi({
       providesTags: (result, error, id) => [{ type: "Product", id }],
       keepUnusedDataFor: 0,
     }),
-    createProduct: builder.mutation<ApiResponse, FormData>({
-      query: (body) => ({
+    createProduct: builder.mutation<ApiResponse,{idemKey: string, body: FormData}>({
+      query: ({idemKey, body}) => ({
         url: "/api/admin/catalog/products",
         method: "POST",
         body,
+        headers: {
+          'Idempotency-Key': idemKey,
+        }
       }),
       invalidatesTags: [{ type: "Products", id: "LIST" }],
     }),

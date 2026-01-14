@@ -4,7 +4,7 @@ import Select from 'react-select';
 import { selectStyles } from '../../features/data/select.data';
 type Opt = { id: string, value: string; label: string };
 const AttributeTabs = () => {
-    const { control, setValue, formState: { errors } } = useFormContext<ProductFormUI>();
+    const { control, formState: { errors } } = useFormContext<ProductFormUI>();
     const { fields } = useFieldArray({
         name: "attributes",
         control,

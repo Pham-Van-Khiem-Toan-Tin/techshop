@@ -74,6 +74,13 @@ export const brandApi = createApi({
       }),
       invalidatesTags: [{ type: "Brands", id: "LIST" }],
     }),
+    toggleActiveBrand: builder.mutation<ApiResponse, string>({
+      query: (id) => ({
+        url: `/api/admin/catalog/brands/${id}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: [{ type: "Brands", id: "LIST" }],
+    }),
     deleteBrand: builder.mutation<ApiResponse, string>({
       query: (id) => ({
         url: `/api/admin/catalog/brands/${id}`,
@@ -93,5 +100,6 @@ export const {
   useDeleteBrandMutation,
   useGetBrandByIdQuery,
   useUpdateBrandMutation,
-  useGetBrandOptionQuery
+  useGetBrandOptionQuery,
+  useToggleActiveBrandMutation
 } = brandApi;

@@ -13,9 +13,11 @@ import AttributeTabs from "./AttributeTabs";
 import SKUTabs from "./SKUTabs";
 import { useCreateProductMutation } from "../../features/product/product.api";
 import { toast } from "react-toastify";
+import { useRef } from "react";
 
 const ProductCreate = () => {
     const navigate = useNavigate();
+    const idemRef = useRef<string | null>(null)
     const methods = useForm<ProductFormUI>({
         defaultValues: {
             name: "",
@@ -40,6 +42,9 @@ const ProductCreate = () => {
     const [createProduct, { isLoading }] = useCreateProductMutation()
     const onSubmit: SubmitHandler<ProductFormUI> = async (data: ProductFormUI) => {
         try {
+            if (!idemRef.current) {
+                idemRef.current = crypto.randomUUID();
+            }
             const hasVariants = data.hasVariants;
             let skus: SkuCreateForm[] = [];
             if (!hasVariants) {
@@ -50,6 +55,7 @@ const ProductCreate = () => {
                     costPrice: data.costPrice,
                     originalPrice: data.originalPrice,
                     stock: data.stock,
+                    active: true,
                     attributes: [],
                     image: null
                 }]
@@ -61,11 +67,11 @@ const ProductCreate = () => {
                     costPrice: item.costPrice,
                     originalPrice: item.originalPrice,
                     stock: item.stock,
+                    active: item.active,
                     attributes: item.attributes,
                     image: item.image
                 }))
             }
-            console.log(data.attributes);
 
             const payload: ProductCreateForm = {
                 name: data.name.trim(),
@@ -82,8 +88,9 @@ const ProductCreate = () => {
                 gallery: data.gallery as File[],
                 skus: skus,
             }
-            console.log(payload);
-
+            
+            console.log({payload});
+            
             const fd = new FormData()
             fd.append("name", payload.name)
             fd.append("slug", payload.slug)
@@ -94,15 +101,15 @@ const ProductCreate = () => {
             fd.append("warrantyMonth", String(payload.warrantyMonth))
             fd.append("hasVariants", String(payload.hasVariants))
             const specsToSend = prepareSpecs(payload.specs); 
-            console.log({specsToSend});
             
             fd.append("specs", JSON.stringify(specsToSend))
             payload.attributes.forEach((at, index) => {
-                fd.append(`attributes[${index}].groupId`, at.id)
+                fd.append(`attributes[${index}].id`, at.id)
                 fd.append(`attributes[${index}].label`, at.name)
                 at.values.forEach((a, indexA) => {
                     fd.append(`attributes[${index}].values[${indexA}].id`, a.id)
                     fd.append(`attributes[${index}].values[${indexA}].value`, a.value)
+                    fd.append(`attributes[${index}].values[${indexA}].active`, JSON.stringify(a.active))
                 })
             })
             fd.append("thumbnail", payload.thumbnail)
@@ -114,25 +121,24 @@ const ProductCreate = () => {
                 fd.append(`skus[${index}].name`, sku.name);
                 fd.append(`skus[${index}].price`, String(sku.price));
                 fd.append(`skus[${index}].costPrice`, String(sku.costPrice));
+                fd.append(`skus[${index}].active`, String(sku.active));
                 fd.append(`skus[${index}].originalPrice`, String(sku.originalPrice));
                 fd.append(`skus[${index}].stock`, String(sku.stock));
                 sku.attributes.forEach((op, indexOp) => {
                     fd.append(`skus[${index}].specs[${indexOp}].id`, String(op.id))
-                    fd.append(`skus[${index}].specs[${indexOp}].value`, String(op.value))
                     fd.append(`skus[${index}].specs[${indexOp}].groupId`, String(op.groupId))
                 })
                 if (sku.image) {
                     fd.append(`skus[${index}].image`, sku.image);
                 }
             })
-            const res = await createProduct(fd).unwrap();
+            const res = await createProduct({idemKey: idemRef.current, body: fd}).unwrap();
             toast.success(res?.message ?? "Tạo sản phẩm thành công");
 
             setTimeout(() => navigate("/products", { replace: true }), 1200);
         } catch (error: any) {
             toast.error(error?.data?.message ?? "Có lỗi xảy ra");
         }
-
     }
     const prepareSpecs = (rawAttributes: Attribute[]) => {
         return rawAttributes.map(attr => {
@@ -224,7 +230,7 @@ const ProductCreate = () => {
                                 {
                                     hasVariants && (
                                         <TabPanel>
-                                            <SKUTabs />
+                                            <SKUTabs mode="create" />
                                         </TabPanel>
                                     )
                                 }

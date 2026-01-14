@@ -24,7 +24,9 @@ import { RiDeleteBin6Line, RiEditLine, RiEyeLine } from "react-icons/ri";
 import {
   useGetAllCategoriesQuery,
   useDeleteCategoryMutation,
+  useChangeActiveCategoryMutation,
 } from "../../features/category/category.api";
+import { HiOutlineLockClosed, HiOutlineLockOpen } from "react-icons/hi2";
 
 const SIZE_OPTIONS = [10, 25, 50, 100] as const;
 const DEFAULT_SIZE = 10;
@@ -158,7 +160,7 @@ const CategoryManagement = () => {
   const closeDelete = () => setDeleteTarget(null);
 
   const [deleteCategory, { isLoading: isDeleting }] = useDeleteCategoryMutation();
-
+  const [toggleActive, {isLoading: isToggling}] = useChangeActiveCategoryMutation()
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
 
@@ -263,6 +265,11 @@ const CategoryManagement = () => {
           items: [
             { key: "view", label: <RiEyeLine />, onClick: (r) => navigate(`view/${r.id}`) },
             { key: "edit", label: <RiEditLine />, onClick: (r) => navigate(`edit/${r.id}`) },
+            {
+              key: "active",
+              labelOption: (r) => r.active ? <HiOutlineLockClosed /> : <HiOutlineLockOpen />,
+              onClick: async (r) => await toggleActive(r.id),
+            },
             {
               key: "delete",
               label: <RiDeleteBin6Line />,

@@ -16,6 +16,7 @@ import type { CategoryOption, CategoryDetail } from "../../types/category.type";
 import type { CategoryCreateFormUI } from "../../types/category.type";
 
 import { useGetCategoryByIdQuery, useGetCategoryOptionQuery } from "../../features/category/category.api";
+import { PiEyeSlashThin, PiEyeThin } from "react-icons/pi";
 
 type ParentSelectOption = { value: string; label: string };
 
@@ -36,7 +37,7 @@ const CategoryDetail = () => {
     shouldUnregister: false,
   });
 
-  const { register, control, reset, getValues, setValue } = methods;
+  const { register, control, reset, getValues, setValue, watch } = methods;
 
   // chỉ để render list attributeConfigs từ RHF cho tiện
   const { fields } = useFieldArray({
@@ -92,8 +93,8 @@ const CategoryDetail = () => {
   useEffect(() => {
     if (!detail) return;
     const d = detail as CategoryDetail;
-    console.log({d});
-    
+    console.log({ d });
+
     const imageUrl = d.image.imageUrl ?? "";
     setServerImageUrl(imageUrl);
 
@@ -149,7 +150,7 @@ const CategoryDetail = () => {
   }, [detail, reset]);
 
   const isBusy = isDetailLoading || isDetailFetching;
-
+  const active = watch("active")
   return (
     <div className="border-app--rounded bg-white m-4 py-4 position-relative">
       {/* Header */}
@@ -209,7 +210,7 @@ const CategoryDetail = () => {
                             placeholder="Danh mục gốc"
                             options={parentOptions}
                             value={parentOptions.find((o) => o.value === field.value) ?? null}
-                            onChange={() => {}}
+                            onChange={() => { }}
                             isClearable={false}
                             isLoading={isParentLoading || isParentFetching}
                             isDisabled
@@ -228,7 +229,7 @@ const CategoryDetail = () => {
                         render={({ field }) => (
                           <Select<IconOption, false>
                             value={optionIcons.find((o) => o.value === field.value) ?? null}
-                            onChange={() => {}}
+                            onChange={() => { }}
                             options={optionIcons}
                             isSearchable
                             isClearable={false}
@@ -276,32 +277,23 @@ const CategoryDetail = () => {
                       </div>
 
                       <div>
-                        <label className="form-label">Hiển thị</label>
-                        <Controller
-                          name="active"
-                          control={control}
-                          render={({ field }) => (
-                            <Select
-                              options={BOOL_OPTIONS}
-                              value={BOOL_OPTIONS.find((x) => x.value === field.value) ?? BOOL_OPTIONS[0]}
-                              onChange={() => {}}
-                              isSearchable={false}
-                              isDisabled
-                              components={{ DropdownIndicator: null, IndicatorSeparator: null }}
-                              styles={{
-                                ...selectStyles,
-                                control: (base: any) => ({ ...base, minHeight: 34 }),
-                                valueContainer: (base: any) => ({ ...base, paddingTop: 0, paddingBottom: 0 }),
-                                indicatorsContainer: (base: any) => ({ ...base, height: 34 }),
-                              }}
-                            />
+                        <button disabled className={`d-flex align-items-center gap-2 btn-app ${active ? "btn-app--active" : "btn-app--destructive"}`} type="button">
+                          {active ? (
+                            <>
+                              <PiEyeThin size={20} />
+                              <span>Hoạt động</span>
+                            </>
+                          ) : (
+                            <>
+                              <PiEyeSlashThin size={20} />
+                              <span>Vô hiệu hóa</span>
+                            </>
                           )}
-                        />
+                        </button>
                       </div>
                     </div>
                   </div>
 
-                  <div className="my-4 border-top" />
                 </div>
               </TabPanel>
 

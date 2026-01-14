@@ -9,6 +9,7 @@ type CommonProps = {
   picker: boolean;
   Icon: React.ReactElement;
   message: string;
+  disabled?: boolean;
   width: string;
   height: string;
   max?: number; // chỉ dùng khi multiple=true
@@ -34,6 +35,7 @@ const UploadImageBox = (props: Props) => {
     message,
     width,
     height,
+    disabled = false,
     max = 10,
   } = props;
 
@@ -122,6 +124,7 @@ const UploadImageBox = (props: Props) => {
                   className="upload-remove"
                   onClick={() => removeAt(idx)}
                   aria-label="remove"
+                  disabled={disabled}
                 >
                   ×
                 </button>
@@ -134,6 +137,7 @@ const UploadImageBox = (props: Props) => {
                 className="upload-drop upload-drop--add"
                 style={{ width, height,  borderColor: error ? "#ef4444" : "#cbd5e1" }}
                 onClick={openPicker}
+                disabled={disabled}
                 onDrop={handleDrop as any}
               >
                 <div className="upload-add-inner">
@@ -150,6 +154,7 @@ const UploadImageBox = (props: Props) => {
             className="upload-drop position-relative"
             style={{ width, height, borderColor: error ? "#ef4444" : "#cbd5e1" }}
             onClick={openPicker}
+            disabled={disabled}
             onDrop={handleDrop as any}
           >
             {previews[0]?.src ? (
@@ -161,6 +166,7 @@ const UploadImageBox = (props: Props) => {
                 />
                 <button
                   type="button"
+                  disabled={disabled}
                   className="upload-remove"
                   onClick={(e) => {
                     e.stopPropagation();

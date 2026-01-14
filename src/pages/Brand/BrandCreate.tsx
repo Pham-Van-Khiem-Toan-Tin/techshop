@@ -11,6 +11,7 @@ import { useGetLeafCategoryQuery } from '../../features/category/category.api'
 import type { CategoryOption } from '../../types/category.type'
 import { PiEyeLight, PiEyeSlash } from 'react-icons/pi'
 import { FiUpload } from 'react-icons/fi'
+import { slugify } from '../../utils/string'
 
 const optionsStatus: Record<StatusKey, {
   content: string;
@@ -48,7 +49,6 @@ const BrandCreate = () => {
   const { data: categoryOptions, isLoading: isCategoryLoading } = useGetLeafCategoryQuery(null);
   const [createBrand, { isLoading: isCreating }] = useCreateBrandMutation();
   const onSubmit: SubmitHandler<BrandCreateFormUI> = async (data: BrandCreateFormUI) => {
-    console.log(data);
 
     try {
       const fd = new FormData();
@@ -68,7 +68,21 @@ const BrandCreate = () => {
 
     setOptions(categoryOptions)
   }, [categoryOptions])
+  const [slugAuto, setSlugAuto] = useState(true);
 
+  const name = watch("name")
+  const slug = watch("slug")
+  useEffect(() => {
+    if (!slugAuto) return;
+    const next = slugify(name || "")
+    if (next === slug) return;
+
+    setValue("slug", next, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false, // ⭐ quan trọng
+    });
+  }, [name, slugAuto, slug, setValue])
   const handelChangeSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setKeyword(e.target.value);
     if (categoryOptions) {
@@ -113,6 +127,9 @@ const BrandCreate = () => {
                     required: {
                       value: true,
                       message: "Slug được để trống."
+                    },
+                    onChange: () => {
+                      setSlugAuto(false)
                     }
                   })} disabled={isCreating} type="text" id='slug' className='form-control form-control-sm' placeholder='e.g. Apple' />
                   {errors.slug && <span className='form-message-error'>{errors.slug?.message}</span>}

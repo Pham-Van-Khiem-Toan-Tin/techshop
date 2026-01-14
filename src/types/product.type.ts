@@ -1,3 +1,4 @@
+import type { Option } from "./select.type";
 
 export interface Attribute {
   id: string;
@@ -7,6 +8,18 @@ export interface Attribute {
   displayOrder: number;
   unit: string;
   value: string | number | boolean | Options[] | Options | null;
+}
+
+export interface AttributeDetail {
+  id: string;
+  code: string;
+  dataType: DataType;
+  label: string;
+  displayOrder: number;
+  unit: string;
+  value: string | number | boolean | Options[] | Options | null;
+  valueSelect: Option;
+  valueMultiSelect: Option[];
 }
 
 export interface Options {
@@ -36,20 +49,21 @@ export interface AttributeOptions {
 export interface SKU {
   key: string;
   id: string;
-  image: File | null;
+  image: File | null | string;
   skuCode: string;
   name: string;
   price: number;
   costPrice: number;
   originalPrice: number;
-  locked: boolean;
+  active: boolean;
+  discontinued: boolean;
   stock: number;
   attributes: Val[];
 }
 
 export interface CategoryDetail {
   id: string;
-  slug: string;
+  slug?: string;
   name: string;
 }
 export interface ProductFormUI {
@@ -61,10 +75,10 @@ export interface ProductFormUI {
   shortDescription: string;
   description: string;
   hasVariants: boolean;
-  price: number;
-  originalPrice: number;
-  costPrice: number;
-  stock: number;
+  price?: number;
+  originalPrice?: number;
+  costPrice?: number;
+  stock?: number;
   bulk: {
     price: number;
     originalPrice: number;
@@ -77,6 +91,10 @@ export interface ProductFormUI {
   skus: SKU[];
   attributeOptions: AttributeOptions[];
   skuOptions: Group[];
+  draft?: {
+    name: string;
+    value: string;
+  };
 }
 
 export interface Group {
@@ -89,9 +107,8 @@ export interface Val {
   groupId: string;
   id: string;
   value: string;
-  active?: boolean;
-  deprecated?: boolean;
-  used?: boolean;
+  active: boolean;
+  isOldData?: boolean;
 }
 
 export interface SkuCreateForm {
@@ -101,6 +118,7 @@ export interface SkuCreateForm {
   price: number;
   costPrice: number;
   originalPrice: number;
+  active: boolean;
   stock: number;
   attributes: Val[];
 }
@@ -125,7 +143,6 @@ export interface ProductCreateForm {
   skus: SkuCreateForm[];
 }
 
-
 export interface Product {
   id: string;
   name: string;
@@ -133,17 +150,17 @@ export interface Product {
   brand: {
     id: string;
     name: string;
-  }
+  };
   category: {
     id: string;
     name: string;
-  }
+  };
   status: string;
 }
 
 export interface Image {
-  imageUrl: string,
-  imagePublicId: string
+  imageUrl: string;
+  imagePublicId: string;
 }
 export interface SkuDetail {
   id: string;
@@ -153,29 +170,30 @@ export interface SkuDetail {
   price: number;
   originalPrice: number;
   costPrice: number;
-  image: Image;
+  thumbnail: Image;
   active: boolean;
   discontinued: boolean;
   discontinuedReason: string;
   stock: number;
   soldCount: number;
-  selections: SkuSelect[]
+  selections: SkuSelect[];
 }
 export interface SkuSelect {
-  code: string;
+  groupId: string;
   valueId: string;
 }
 export interface ProductDetail {
   name: string;
   slug: string;
   category: {
-    id: string,
-    name: string
-  }
+    id: string;
+    name: string;
+  };
   brand: {
-    id: string,
-    name: string
-  }
+    id: string;
+    name: string;
+  };
+  warrantyMonth: number;
   description: string;
   shortDescription: string;
   thumbnail: Image;
@@ -186,19 +204,19 @@ export interface ProductDetail {
   minPrice: number;
   maxPrice: number;
   hasVariants: boolean;
-  variantGroups: VariantGroup[],
-  specs: Attribute[]
-  skus: SkuDetail[]
+  variantGroups: VariantGroup[];
+  specs: AttributeDetail[];
+  skus: SkuDetail[];
 }
 
 export interface OptionItem {
-  id: string,
-  value: string,
-  active: boolean,
-  deprecated: boolean
+  id: string;
+  value: string;
+  active: boolean;
+  deprecated: boolean;
 }
 export interface VariantGroup {
-  groupId: string,
-  label: string,
-  values: OptionItem[]
+  id: string;
+  label: string;
+  values: OptionItem[];
 }

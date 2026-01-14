@@ -85,17 +85,25 @@ const ProductEdit = () => {
           // Map SKU Options (Nhóm biến thể: Màu sắc, Size...)
           // Logic này giả định backend trả về structure Group[] trong productData.attributes (theo interface bạn gửi)
           // Nếu backend không trả về group định nghĩa, bạn phải tự reduce từ list SKUs.
-          const mappedSkuOptions = productData.attributes || [];
 
           // Map SKUs
           const mappedSkus = productData.skus.map(sku => ({
             ...sku,
             key: sku.skuCode, // Dùng skuCode làm key tạm
             id: sku.id,
-            image: sku.image.imageUrl, // URL ảnh (string)
-            locked: false
+            skuCode: sku.skuCode,
+            image: sku.thumbnail.imageUrl, // URL ảnh (string)
+            name: sku.name,
+            price: sku.price,
+            costPrice: sku.costPrice,
+            originalPrice: sku.originalPrice,
+            active: sku.active,
+            discontinued: sku.discontinued,
+            stock: sku.stock,
+            attributes: sku.selections
           }));
-
+          console.log(productData);
+          
           // Reset form
           reset({
             name: productData.name,
@@ -110,17 +118,34 @@ const ProductEdit = () => {
             description: productData.description,
             hasVariants: productData.hasVariants,
             // Nếu có biến thể, giá ở ngoài thường là min price hoặc 0, tùy logic
-
+            skuOptions: productData.variantGroups.map(it => ({
+              id: it.id,
+              name: it.label,
+              value: "",
+              values: it.values.map(v => ({
+                groupId: it.id,
+                value: v.value,
+                id: v.id,
+                active: v.active,
+                isOldData: true
+              })),
+            })),
             image: productData.thumbnail.imageUrl, // URL string
-            gallery: productData.gallery, // URL strings array
+            gallery: productData.gallery.map(it => it.imageUrl), // URL strings array
 
-            attributes: productData.specs, // Giá trị thông số kỹ thuật
+            attributes: productData.specs.map(it => ({
+              id: it.id,
+              code: it.code,
+              label: it.label,
+              dataType: it.dataType,
+              unit: it.unit,
+              value: it.value,
+              displayOrder: it.displayOrder
+            })), // Giá trị thông số kỹ thuật
             attributeOptions: mappedAttributeOptions, // Cấu hình thông số
-
-            skuOptions: mappedSkuOptions, // Cấu hình biến thể
+            bulk: {price: 0, costPrice: 0, originalPrice: 0, stock: 0},
             skus: mappedSkus, // Danh sách biến thể chi tiết
 
-            bulk: { price: 0, costPrice: 0, originalPrice: 0, stock: 0 }
           });
 
         } catch (error) {
@@ -272,7 +297,7 @@ const ProductEdit = () => {
                 <TabPanel><GeneralTabs /></TabPanel>
                 <TabPanel><AttributeTabs /></TabPanel>
                 {hasVariants && (
-                  <TabPanel><SKUTabs /></TabPanel>
+                  <TabPanel><SKUTabs mode="edit" /></TabPanel>
                 )}
                 <TabPanel><DescriptionTabs /></TabPanel>
               </Tabs>

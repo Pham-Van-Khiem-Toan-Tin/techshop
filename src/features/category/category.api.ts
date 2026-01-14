@@ -97,6 +97,13 @@ export const categoryApi = createApi({
       }),
       invalidatesTags: [{ type: "Categories", id: "LIST" }],
     }),
+    changeActiveCategory: builder.mutation<ApiResponse, string>({
+      query: (id) => ({
+        url: `/api/admin/catalog/categories/${id}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: [{ type: "Categories", id: "LIST" }],
+    }),
     deleteCategory: builder.mutation<ApiResponse, string>({
       query: (id) => ({
         url: `/api/admin/catalog/categories/${id}`,
@@ -121,4 +128,5 @@ export const {
   useGetCategoryOptionQuery,
   useCreateCategoryMutation,
   useUpdateCategoryMutation,
+  useChangeActiveCategoryMutation
 } = categoryApi;

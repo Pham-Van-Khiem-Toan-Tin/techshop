@@ -213,7 +213,7 @@ const ProductManagement = () => {
 
           <div className="d-flex align-items-center gap-2">
             <Link to="create" className="btn-app btn-app--sm btn-app--default">
-              Thêm thuộc tính
+              Thêm sản phẩm
             </Link>
           </div>
         </div>

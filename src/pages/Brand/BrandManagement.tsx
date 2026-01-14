@@ -16,8 +16,9 @@ import type { Page } from "../../types/page.type";
 import { Link, useNavigate } from 'react-router';
 import { toast } from "react-toastify";
 import { Modal } from "react-bootstrap";
-import { useDeleteBrandMutation, useGetAllBrandsQuery } from "../../features/brand/brand.api";
+import { useDeleteBrandMutation, useGetAllBrandsQuery, useToggleActiveBrandMutation } from "../../features/brand/brand.api";
 import type { Brand } from "../../types/brand.type";
+import { HiOutlineLockClosed, HiOutlineLockOpen } from "react-icons/hi2";
 const SIZE_OPTIONS = [10, 25, 50, 100] as const;
 const DEFAULT_SIZE = 10;
 const normalizeSize = (raw: number) =>
@@ -122,7 +123,7 @@ const BrandManagement = () => {
             return Array.from(set);
         });
     };
-
+    const [toggleActive, {isLoading: isLoadingToggle}] = useToggleActiveBrandMutation()
     // react-select value mappings (draft)
     const fieldValue = FIELD_OPTIONS.filter((o) => fieldDraft.includes(o.value));
     const sortValue =
@@ -222,7 +223,7 @@ const BrandManagement = () => {
 
                     <div className="d-flex align-items-center gap-2">
                         <Link to="create" className="btn-app btn-app--sm btn-app--default">
-                            Thêm thuộc tính
+                            Thêm thương hiệu
                         </Link>
                     </div>
                 </div>
@@ -250,6 +251,11 @@ const BrandManagement = () => {
                     items: [
                         { key: "view", label: <RiEyeLine />, onClick: (r) => navigate(`view/${r.id}`) },
                         { key: "edit", label: <RiEditLine />, onClick: (r) => navigate(`edit/${r.id}`) },
+                        {
+                                      key: "active",
+                                      labelOption: (r) => r.status == "active" ? <HiOutlineLockClosed /> : <HiOutlineLockOpen />,
+                                      onClick: async (r) => await toggleActive(r.id),
+                                    },
                         {
                             key: "delete",
                             label: <RiDeleteBin6Line />,

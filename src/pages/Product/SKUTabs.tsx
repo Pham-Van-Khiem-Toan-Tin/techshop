@@ -6,13 +6,15 @@ import { RiDeleteBin6Line } from 'react-icons/ri';
 import { toast } from 'react-toastify';
 import { IoClose } from 'react-icons/io5';
 import UploadImageBox from '../../components/common/UploadImageBox';
-import { PiImageSquareThin } from 'react-icons/pi';
-import { GoStack } from 'react-icons/go';
+import { PiEyeSlashThin, PiEyeThin, PiImageSquareThin } from 'react-icons/pi';
+import { GoCircleSlash, GoStack } from 'react-icons/go';
+import { slugify } from '../../utils/string';
+import { HiOutlineLockClosed, HiOutlineLockOpen } from 'react-icons/hi2';
 
 
 
-const SKUTabs = () => {
-    const { register, control, setValue, getValues } = useFormContext<ProductFormUI>();
+const SKUTabs = ({ mode }: { mode: "create" | "edit" }) => {
+    const { register, control, setValue, getValues, formState: { errors } } = useFormContext<ProductFormUI>();
     const attributesOptions = useWatch({ name: "attributeOptions", control })
     const productName = useWatch({ name: "name", control })
     const category = useWatch({ name: "category", control })
@@ -21,7 +23,7 @@ const SKUTabs = () => {
         name: "skuOptions",
         keyName: "_id"
     })
-    const { fields: skuFields, append: appendSkus, replace: replaceSkus, update: updateSkus } = useFieldArray({
+    const { fields: skuFields, append: appendSkus, replace: replaceSkus, update: updateSkus, remove: removeSku } = useFieldArray({
         control,
         name: "skus",
         keyName: "skuId"
@@ -86,7 +88,7 @@ const SKUTabs = () => {
 
             const existingSku = currentSkus.find(s => s.key === key);
             const skuString = attrs.map(s => s.value).join("-");
-            const skuCode = removeVietnameseTones((productName.trim() || category.slug || "") + "-" + skuString);
+            const skuCode = removeVietnameseTones(slugify((productName.trim() || category.slug || "") + "-" + skuString));
 
             return {
                 ...existingSku,
@@ -99,17 +101,14 @@ const SKUTabs = () => {
                 originalPrice: existingSku?.originalPrice ?? 0,
                 stock: existingSku?.stock ?? 0,
                 costPrice: existingSku?.costPrice ?? 0,
-                locked: false,
+                active: true,
+                discontinued: false,
                 attributes: attrs
             };
         });
 
-        // GIỮ SKU “locked/used” kể cả khi không còn được generate (do deprecated value)
-        const lockedSkus = currentSkus.filter(
-            s => s.locked === true && !newSkusList.some(n => n.key === s.key)
-        );
 
-        replaceSkus([...newSkusList, ...lockedSkus]);
+        replaceSkus([...newSkusList]);
     };
 
 
@@ -117,41 +116,65 @@ const SKUTabs = () => {
         if (e.key === "Enter") {
             e.preventDefault()
             const watchedSkuOptions = getValues("skuOptions")
-            const currentGroup = watchedSkuOptions[index];
-            const name = currentGroup?.name.trim();
-            const value = currentGroup?.value.trim()
-            const currentSkus = getValues("skus")
+            if (watchedSkuOptions.length == 0) {
+                const name = getValues("draft.name")?.trim()
+                const value = getValues("draft.value")?.trim()
+                if (!name || !value || value == name) {
+                    toast.error("Vui lòng nhập giá trị phân loại")
+                    return;
+                }
+                const newId = crypto.randomUUID()
+                append({
+                    id: newId,
+                    name: name,
+                    value: "",
+                    values: [{
+                        groupId: newId,
+                        id: crypto.randomUUID(),
+                        value: value,
+                        active: true,
+                    }]
+                })
 
-            const groupIds = new Set(currentSkus.flatMap(it => it.attributes).map(o => o.groupId))
 
-            const skuOptionsList = getValues("skuOptions")
-            const skuOptionListName = skuOptionsList.map(g => g.name)
-            const skuOptionSetName = new Set(skuOptionsList.map(g => g.name))
-            const groupNames = new Set(skuOptionsList.filter(g => groupIds.has(g.id)).map(g => g.name))
-            if (!value || !name
-                || skuOptionListName.length != skuOptionSetName.size
-                || currentGroup?.values.some(itg => itg.value == value)
-                || (!groupIds.has(currentGroup.id) && groupNames.has(name))
-                || (groupIds.has(currentGroup.id) && groupNames.has(value))) {
-                toast.error("Dữ liệu không hợp lệ hoặc trùng lặp thuộc tính")
-                return
+            } else {
+                const currentGroup = watchedSkuOptions[index];
+
+                const name = currentGroup?.name.trim();
+                const value = currentGroup?.value.trim();
+                if (!name || !value || name == value) {
+                    toast.error("Dữ liệu không hợp lệ")
+                    return;
+                }
+                const skuOptionListName = watchedSkuOptions.map(g => normalizeName(g.name));
+                const currentGroupOptionValue = currentGroup.values.map(it => normalizeName(it.value));
+                if (!currentGroup.name && skuOptionListName.includes(normalizeName(name))) {
+                    toast.error("Dữ liệu không hợp lệ");
+                    return;
+                }
+                if (currentGroupOptionValue.includes(normalizeName(value))) {
+                    toast.error("Dữ liệu không hợp lệ");
+                    return;
+                }
+                const newVal = {
+                    groupId: currentGroup.id,
+                    id: crypto.randomUUID(),
+                    value: value,
+                    active: true,
+                }
+
+                update(index, {
+                    ...currentGroup,
+                    values: [...currentGroup.values, newVal],
+                })
+                setValue(`skuOptions.${index}.value`, "");
             }
-            const newVal = {
-                groupId: currentGroup.id,
-                id: crypto.randomUUID(),
-                value: value,
-                active: true,
-                deprecated: false
-            }
-
-            update(index, {
-                ...currentGroup,
-                values: [...currentGroup.values, newVal],
-            })
-            setValue(`skuOptions.${index}.value`, "");
             const nextSkuOptions = getValues("skuOptions")
             handleGenerateSkus(nextSkuOptions)
         }
+    }
+    const normalizeName = (name: string) => {
+        return name.trim().replaceAll(/\s+/g, " ").toLowerCase();
     }
     const handDeleteValue = (groupIndex: number, valueId: string) => {
         const currentOptions = getValues("skuOptions");
@@ -263,15 +286,21 @@ const SKUTabs = () => {
 
         const skusValue = getValues("skus") ?? []
         const bulk = getValues("bulk")
-        const newItems = skusValue.map(item => ({
-            ...item,
-            price: bulk.price,
-            costPrice: bulk.costPrice,
-            originalPrice: bulk.originalPrice,
-            stock: bulk.stock
-        }))
-        replaceSkus(newItems)
-    }
+        skusValue.forEach((sku, i) => {
+            if (bulk.price !== null && bulk.price != null)
+                setValue(`skus.${i}.price`, bulk.price, { shouldDirty: true, shouldValidate: false });
+
+            if (bulk.costPrice !== null && bulk.costPrice != null)
+                setValue(`skus.${i}.costPrice`, bulk.costPrice, { shouldDirty: true, shouldValidate: false });
+
+            if (bulk.originalPrice !== null && bulk.originalPrice != null)
+                setValue(`skus.${i}.originalPrice`, bulk.originalPrice, { shouldDirty: true, shouldValidate: false });
+
+            if (bulk.stock !== null && bulk.stock != null)
+                setValue(`skus.${i}.stock`, bulk.stock, { shouldDirty: true, shouldValidate: false });
+        })
+    };
+    const [discontinuedSelected, setDiscontinuedSelected] = useState(null);
     return (
         <div className='px-4'>
             {attributesOptions != null && attributesOptions.length > 0 ?
@@ -280,14 +309,15 @@ const SKUTabs = () => {
                         <div className='col-4 d-flex flex-column gap-3'>
                             <div className='f-meta f-bold form-label mb-0'>Cấu hình nhóm phân loại</div>
                             <div className='f-caption'>Thêm các nhóm như Màu sắc, Kích thước.</div>
-                            {fields?.map((field, index) => (
+                            {fields && fields.length > 0 ? fields?.map((field, index) => (
                                 <div key={field._id} className='form-app border-app--rounded p-3'>
                                     <div>
                                         <div className='d-flex align-items-center justify-content-between'>
                                             <label htmlFor={"name" + index} className='f-body-sm fw-bold'>Tên nhóm phân loại {index + 1}</label>
-                                            <button onClick={() => deleteItemGroup(index)} className='btn-app btn-icon btn-app--sm btn-app--outline p-1 border-0 text-danger'>
-                                                <RiDeleteBin6Line />
-                                            </button>
+                                            {fields.length > 1 && fields.flatMap(it => it.values).some(it => !it.isOldData) &&
+                                                <button type='button' onClick={() => deleteItemGroup(index)} className='btn btn-secondary border-0 bg-transparent text-secondary'>
+                                                    <RiDeleteBin6Line />
+                                                </button>}
                                         </div>
 
                                         <input {...register(`skuOptions.${index}.name`)} className="form-control form-control-sm" id={"name" + index} type="text" placeholder='ví dụ: Màu sắc' />
@@ -296,9 +326,16 @@ const SKUTabs = () => {
                                         {field.values.map(v => (
                                             <span key={v.id} className='d-inline-block ps-2 bg-neutral-200 f-caption'>
                                                 <span>{v.value}</span>
-                                                <button onClick={() => handDeleteValue(index, v.id)} className='border-0 bg-transparent'>
-                                                    <IoClose />
-                                                </button>
+                                                {v.isOldData ? (
+                                                    <button type='button' className='border-0 bg-transparent'>
+                                                        {v.active ? (<PiEyeSlashThin />) : (<PiEyeThin />)}
+                                                    </button>
+                                                ) : (
+
+                                                    <button type='button' onClick={() => handDeleteValue(index, v.id)} className='border-0 bg-transparent'>
+                                                        <IoClose />
+                                                    </button>
+                                                )}
                                             </span>
 
                                         ))}
@@ -308,19 +345,39 @@ const SKUTabs = () => {
                                         <input {...register(`skuOptions.${index}.value`)} onKeyDown={(e) => handleKeyDown(e, index)} className="form-control form-control-sm" id={"value" + index} type="text" placeholder='Nhập giá trị...' />
                                     </div>
                                 </div>
-                            ))}
-                            <button type='button' onClick={addItemGroup} className='btn-app btn-app--ghost btn-app-icon border-dashed bg-neutral-100 w-100'>
-                                <IoMdAdd />
-                                <span>Thêm nhóm phân loại</span>
-                            </button>
+                            )) : (
+                                <div className='form-app border-app--rounded p-3'>
+                                    <div>
+                                        <div className='d-flex align-items-center justify-content-between'>
+                                            <label htmlFor="name1" className='f-body-sm fw-bold'>Tên nhóm phân loại 1</label>
+                                        </div>
+
+                                        <input {...register("draft.name", {
+                                            required: true
+                                        })} className={`form-control form-control-sm ${errors.draft?.name && "is-invalid"}`} id="name1" type="text" placeholder='ví dụ: Màu sắc' />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="value1" className='f-body-sm fw-bold'>Giá trị (Nhập & Enter)</label>
+                                        <input {...register("draft.value", {
+                                            required: true
+                                        })} onKeyDown={(e) => handleKeyDown(e, 1)} className={`form-control form-control-sm ${errors.draft?.name && "is-invalid"}`} id="value1" type="text" placeholder='Nhập giá trị...' />
+                                    </div>
+                                </div>
+                            )}
+                            {mode == "create" && (
+                                <button type='button' onClick={addItemGroup} className='btn-app btn-app--ghost btn-app-icon border-dashed bg-neutral-100 w-100'>
+                                    <IoMdAdd />
+                                    <span>Thêm nhóm phân loại</span>
+                                </button>
+                            )}
                         </div>
                         <div className='col-8 form-app flex-column'>
                             <div className='f-meta f-bold form-label mb-0'>Danh sách biến thể (SKU)</div>
                             <div className='f-caption'>Vui lòng thêm nhóm phân loại để tạo biến thể.</div>
                             <div className='form-app'>
                                 <div className='row'>
-                                    <div className='col-2'>
-                                        <label className='form-label' htmlFor="bulk-price">Giá bán hàng loạt</label>
+                                    <div className='col-3'>
+                                        <label className='form-label' htmlFor="bulk-price">Giá bán</label>
                                         <Controller
                                             control={control}
                                             name='bulk.price'
@@ -333,8 +390,8 @@ const SKUTabs = () => {
                                             )}
                                         />
                                     </div>
-                                    <div className='col-2'>
-                                        <label className='form-label' htmlFor="bulk-costPrice">Giá gốc hàng loạt</label>
+                                    <div className='col-3'>
+                                        <label className='form-label' htmlFor="bulk-costPrice">Giá gốc</label>
                                         <Controller
                                             control={control}
                                             name='bulk.costPrice'
@@ -347,8 +404,8 @@ const SKUTabs = () => {
                                             )}
                                         />
                                     </div>
-                                    <div className='col-2'>
-                                        <label className='form-label' htmlFor="bulk-originalPrice">Giá niêm yết hàng loạt</label>
+                                    <div className='col-3'>
+                                        <label className='form-label' htmlFor="bulk-originalPrice">Giá niêm yết</label>
                                         <Controller
                                             control={control}
                                             name='bulk.originalPrice'
@@ -361,8 +418,8 @@ const SKUTabs = () => {
                                             )}
                                         />
                                     </div>
-                                    <div className='col-2'>
-                                        <label className='form-label' htmlFor="bulk-stock">Số lượng hàng loạt</label>
+                                    <div className='col-3'>
+                                        <label className='form-label' htmlFor="bulk-stock">Số lượng</label>
                                         <Controller
                                             control={control}
                                             name='bulk.stock'
@@ -375,7 +432,7 @@ const SKUTabs = () => {
                                             )}
                                         />
                                     </div>
-                                    <div className='d-flex align-items-end col-2'>
+                                    <div className='d-flex align-items-end col-12 mt-2'>
                                         <button onClick={handleBulkApplyAll} type='button' className='btn-app btn-app--sm'>
                                             Áp dụng hàng loạt
                                         </button>
@@ -383,7 +440,7 @@ const SKUTabs = () => {
                                 </div>
                             </div>
                             {skuFields && skuFields.length > 0 ? (
-                                <div className='overflow-x-auto'>
+                                <div className='table-responsive'>
                                     <table className='table-app' style={{ width: 800 }}>
                                         <thead>
                                             <tr>
@@ -391,8 +448,11 @@ const SKUTabs = () => {
                                                 <th scope='col'>Tên biến thể</th>
                                                 <th scope='col'>Giá bán</th>
                                                 <th scope='col'>Giá gốc</th>
-                                                <th scope='col'>Kho</th>
+                                                {mode == "create" && (
+                                                    <th scope='col'>Kho</th>
+                                                )}
                                                 <th scope='col'>Mã SKU</th>
+                                                <th scope='col'>Thao tác</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -412,6 +472,7 @@ const SKUTabs = () => {
                                                                 <UploadImageBox
                                                                     value={field.value}
                                                                     picker={true}
+                                                                    disabled={item.discontinued}
                                                                     message=''
                                                                     error={fieldState.error?.message}
                                                                     width='36px'
@@ -437,6 +498,8 @@ const SKUTabs = () => {
                                                                     <input
                                                                         className={`form-control form-control-sm ${fieldState.error && "is-invalid"}`}
                                                                         type="text"
+                                                                        disabled={item.discontinued}
+
                                                                         value={field.value}
                                                                         onChange={field.onChange}
                                                                         style={{ width: 'fit-content' }} />
@@ -464,10 +527,11 @@ const SKUTabs = () => {
                                                                     <input
                                                                         className={`form-control form-control-sm ${fieldState.error && "is-invalid"}`}
                                                                         type="text"
+                                                                        disabled={item.discontinued}
                                                                         onKeyDown={allowNumberAndDotNoLeadingDotKeyDown}
                                                                         value={field.value}
                                                                         onChange={(e) => field.onChange(normalizeNumberDotOnChange(e.target.value))}
-                                                                        style={{ maxWidth: 60 }} />
+                                                                        style={{ minWidth: 100 }} />
 
                                                                 </div>
                                                             )}
@@ -492,44 +556,48 @@ const SKUTabs = () => {
                                                                     <input
                                                                         className={`form-control form-control-sm ${fieldState.error && "is-invalid"}`}
                                                                         type="text"
+                                                                        disabled={item.discontinued}
                                                                         onKeyDown={allowNumberAndDotNoLeadingDotKeyDown}
                                                                         value={field.value}
                                                                         onChange={(e) => field.onChange(normalizeNumberDotOnChange(e.target.value))}
-                                                                        style={{ maxWidth: 60 }} />
+                                                                        style={{ minWidth: 100 }} />
 
                                                                 </div>
                                                             )}
                                                         />
                                                     </td>
-                                                    <td>
-                                                        <Controller
-                                                            control={control}
-                                                            name={`skus.${index}.stock`}
-                                                            rules={{
-                                                                required: {
-                                                                    value: true,
-                                                                    message: "Tồn kho không được để trống"
-                                                                },
-                                                                validate: {
-                                                                    equalZero: (v) =>
-                                                                        Number(v) > 0 || "Giá trị phải lớn hơn 0"
-                                                                }
-                                                            }}
-                                                            render={({ field, fieldState }) => (
-                                                                <div className='d-flex flex-column justify-content-start'>
-                                                                    <input type="text"
-                                                                        className={`form-control form-control-sm ${fieldState.error && "is-invalid"}`}
-                                                                        value={field.value}
-                                                                        onKeyDown={allowOnlyNumberKeyDown}
-                                                                        onChange={(e) => {
-                                                                            const clean = onlyNumberNoLeadingZero(e.target.value)
-                                                                            field.onChange(clean);
-                                                                        }} style={{ maxWidth: 60 }} />
+                                                    {mode == "create" && (
+                                                        <td>
+                                                            <Controller
+                                                                control={control}
+                                                                name={`skus.${index}.stock`}
+                                                                rules={{
+                                                                    required: {
+                                                                        value: true,
+                                                                        message: "Tồn kho không được để trống"
+                                                                    },
+                                                                    validate: {
+                                                                        equalZero: (v) =>
+                                                                            Number(v) > 0 || "Giá trị phải lớn hơn 0"
+                                                                    }
+                                                                }}
+                                                                render={({ field, fieldState }) => (
+                                                                    <div className='d-flex flex-column justify-content-start'>
+                                                                        <input type="text"
+                                                                            className={`form-control form-control-sm ${fieldState.error && "is-invalid"}`}
+                                                                            value={field.value}
+                                                                            disabled={item.discontinued}
+                                                                            onKeyDown={allowOnlyNumberKeyDown}
+                                                                            onChange={(e) => {
+                                                                                const clean = onlyNumberNoLeadingZero(e.target.value)
+                                                                                field.onChange(clean);
+                                                                            }} style={{ minWidth: 100 }} />
 
-                                                                </div>
-                                                            )}
-                                                        />
-                                                    </td>
+                                                                    </div>
+                                                                )}
+                                                            />
+                                                        </td>
+                                                    )}
 
                                                     <td>
                                                         <Controller
@@ -544,14 +612,36 @@ const SKUTabs = () => {
                                                             render={({ field, fieldState }) => (
                                                                 <div>
                                                                     <input type="text"
+
                                                                         className={`form-control form-control-sm ${fieldState.error && "is-invalid"}`}
                                                                         value={field.value}
+                                                                        disabled={mode == "edit"}
                                                                         onChange={field.onChange}
                                                                         style={{ width: 'fit-content' }} />
 
                                                                 </div>
                                                             )}
                                                         />
+                                                    </td>
+                                                    <td className='col-actions'>
+                                                        <div className='table-actions'>
+                                                            <button disabled={item.discontinued} className='action-btn' onClick={() => updateSkus(index, {
+                                                                ...item,
+                                                                active: !item.active
+                                                            })}>
+                                                                {item.active ? <HiOutlineLockClosed /> : <HiOutlineLockOpen />}
+                                                            </button>
+                                                            {mode == "create" &&
+                                                                <button className='action-btn action-btn--danger' onClick={() => removeSku(index)}>
+                                                                    <RiDeleteBin6Line />
+                                                                </button>
+                                                            }
+                                                            {mode == "edit" &&
+                                                                <button className='action-btn action-btn--danger' onClick={() => removeSku(index)}>
+                                                                    <GoCircleSlash />
+                                                                </button>
+                                                            }
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))}

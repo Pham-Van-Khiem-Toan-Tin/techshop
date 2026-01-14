@@ -32,6 +32,7 @@ import {
   RiAndroidLine,
 } from "react-icons/ri";
 import { SiOppo, SiSamsung, SiXiaomi } from "react-icons/si";
+import { TbDevicesPc } from "react-icons/tb";
 import { TfiMedall } from "react-icons/tfi";
 export type IconOption = {
   value: string;
@@ -106,4 +107,6 @@ export const optionIcons: IconOption[] = [
   },
   { value: "TfiMedall", label: "Thương hiệu", Icon: TfiMedall },
   { value: "AiOutlineProduct", label: "Đơn hàng", Icon: AiOutlineProduct },
+  { value: "TbDevicesPc", label: "Máy tính để bàn", Icon: TbDevicesPc },
+
 ];

@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import Select, { components } from "react-select";
-import { Controller, FormProvider, useFieldArray, useForm, type SubmitHandler } from "react-hook-form";
+import { Controller, FormProvider, useFieldArray, useForm, useWatch, type SubmitHandler } from "react-hook-form";
 import { toast } from "react-toastify";
 import { RiSaveLine } from "react-icons/ri";
 
@@ -28,6 +28,8 @@ import SortableAttributeItem from "./SortableAttributeItem";
 import { Modal } from "react-bootstrap";
 import UploadImageBox from "../../components/common/UploadImageBox";
 import { FiUpload } from "react-icons/fi";
+import { slugify } from "../../utils/string";
+import { PiEyeSlashThin, PiEyeThin } from "react-icons/pi";
 
 type ParentSelectOption = {
   value: string;
@@ -59,6 +61,7 @@ const CategoryCreate = () => {
     control,
     setValue,
     setError,
+    watch,
     getValues,
     formState: { errors },
   } = methods;
@@ -106,7 +109,7 @@ const CategoryCreate = () => {
     ],
     []
   );
-
+  const [slugAuto, setSlugAuto] = useState(true);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
   const [options, setOptions] = useState<AttributeConfigUI[]>([]);
@@ -161,8 +164,20 @@ const CategoryCreate = () => {
       optionsValue: opt.optionsValue,
     });
   };
+  const name = watch("name")
+  const slug = watch("slug")
+  const active = watch("active")
+  useEffect(() => {
+    if (!slugAuto) return;
+    const next = slugify(name || "")
+    if (next === slug) return;
 
-
+    setValue("slug", next, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false, // ⭐ quan trọng
+    });
+  }, [name, slugAuto, slug, setValue])
 
 
   const onSubmit: SubmitHandler<CategoryCreateFormUI> = async (data) => {
@@ -212,7 +227,7 @@ const CategoryCreate = () => {
         }))
       }
       console.log(payload);
-      
+
       fd.append("data", new Blob([JSON.stringify(payload)], { type: "application/json" }))
       // ✅ MultipartFile
       fd.append("image", data.imageFile);
@@ -258,7 +273,6 @@ const CategoryCreate = () => {
   const [showModalAttribute, setShowModalAttribute] = useState(false)
   const closeModalAttribute = () => setShowModalAttribute(false)
   const handleDataConfig = () => {
-    console.log(dataConfig);
 
     setValue("attributeConfigs", dataConfig?.attributeConfigs ?? [], { shouldDirty: true })
     closeModalAttribute()
@@ -333,7 +347,12 @@ const CategoryCreate = () => {
                       <input
                         className="form-control form-control-sm"
                         placeholder="Ví dụ: Sản phẩm"
-                        {...register("slug", { required: "Nhãn menu không được để trống." })}
+                        {...register("slug", {
+                          required: "Nhãn menu không được để trống.",
+                          onChange: () => {
+                            setSlugAuto(false);
+                          }
+                        })}
                       />
                       {errors.slug && (
                         <span className="form-message-error">{errors.slug.message}</span>
@@ -377,7 +396,7 @@ const CategoryCreate = () => {
                     </div>
 
                     {/* iconUrl */}
-                    <div>
+                    <div className="col-12 col-md-6">
                       <label className="form-label">
                         Biểu tượng: <span className="text-danger">*</span>
                       </label>
@@ -454,37 +473,19 @@ const CategoryCreate = () => {
                       </div>
                       {/* isVisible */}
                       <div className="">
-                        <label className="form-label">Hiển thị</label>
-                        <Controller
-                          name="active"
-                          control={control}
-                          rules={{
-                            required: {
-                              value: true,
-                              message: "Trạng thái không được để trống"
-                            }
-                          }}
-                          render={({ field }) => (
-                            <Select
-                              options={BOOL_OPTIONS}
-                              value={BOOL_OPTIONS.find((x) => x.value === field.value) ?? BOOL_OPTIONS[0]}
-                              onChange={(v) => field.onChange((v as any)?.value ?? true)}
-                              isSearchable={false}
-                              isDisabled={isCreating}
-                              components={{ DropdownIndicator: null, IndicatorSeparator: null }}
-                              styles={{
-                                ...selectStyles,
-                                control: (base: any) => ({ ...base, minHeight: 34 }),
-                                valueContainer: (base: any) => ({
-                                  ...base,
-                                  paddingTop: 0,
-                                  paddingBottom: 0,
-                                }),
-                                indicatorsContainer: (base: any) => ({ ...base, height: 34 }),
-                              }}
-                            />
+                        <button className={`d-flex align-items-center gap-2 btn-app ${active ? "btn-app--active" : "btn-app--destructive"}`} type="button" onClick={() => setValue("active", !active)}>
+                          {active ? (
+                            <>
+                              <PiEyeThin size={20} />
+                              <span>Hoạt động</span>
+                            </>
+                          ) : (
+                            <>
+                              <PiEyeSlashThin size={20} />
+                              <span>Vô hiệu hóa</span>
+                            </>
                           )}
-                        />
+                        </button>
                         {errors.active && (
                           <span className="form-message-error">{errors.active.message}</span>
                         )}
