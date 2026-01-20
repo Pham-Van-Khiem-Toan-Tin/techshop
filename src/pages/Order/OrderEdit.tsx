@@ -97,7 +97,7 @@ const OrderEdit = () => {
             }).unwrap();
 
             toast.success("Cập nhật trạng thái đơn hàng thành công!");
-            navigate(`orders`);
+            navigate(`/orders`);
         } catch (e: any) {
             toast.error(e?.data?.message || "Cập nhật thất bại. Vui lòng thử lại.");
         }

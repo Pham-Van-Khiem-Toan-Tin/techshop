@@ -65,41 +65,6 @@
     }
   }
 
-//   /* Runner layer (chỉ để debug outline nếu muốn) */
-//   &__runner {
-//     position: absolute;
-//     inset: 8px; /* chỉnh để bám sát viền card-body */
-//     border-radius: calc(var(--radius) - 10px);
-//     pointer-events: none;
-//     z-index: 2;
-
-//     /* optional: thấy đường chạy */
-//     outline: 1px solid rgba(17, 24, 39, 0.06);
-//     outline-offset: 0;
-//   }
-
-//   /* ✅ Dot chạy theo viền rectangle bo góc bằng Motion Path */
-//   &__runnerDot {
-//     position: absolute;
-//     width: var(--runner-dot);
-//     height: var(--runner-dot);
-//     border-radius: 999px;
-//     background: var(--neutral-700);
-//     box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.08), 0 6px 16px rgba(17, 24, 39, 0.12);
-
-//     /* đường chạy: inset(0) trên chính runner box */
-//     offset-path: inset(0 round calc(var(--radius) - 10px));
-//     offset-distance: 0%;
-//     offset-rotate: 0deg;
-//     animation: uiLoading2Trace var(--runner-speed) linear infinite;
-//   }
-
-//   @keyframes uiLoading2Trace {
-//     to {
-//       offset-distance: 100%;
-//     }
-//   }
-
   &__title {
     color: var(--text);
     letter-spacing: 0.2px;

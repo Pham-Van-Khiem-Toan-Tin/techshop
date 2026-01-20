@@ -56,7 +56,8 @@ export interface SKU {
   costPrice: number;
   originalPrice: number;
   active: boolean;
-  discontinued: boolean;
+  discontinued?: boolean; // thêm
+  discontinuedReason?: string;
   stock: number;
   attributes: Val[];
 }
@@ -67,6 +68,7 @@ export interface CategoryDetail {
   name: string;
 }
 export interface ProductFormUI {
+  id?: string;
   name: string;
   slug: string;
   brandId: string;
@@ -112,7 +114,7 @@ export interface Val {
 }
 
 export interface SkuCreateForm {
-  image: File | null;
+  image: File | null | string;
   skuCode: string;
   name: string;
   price: number;
@@ -141,6 +143,34 @@ export interface ProductCreateForm {
   thumbnail: File;
   gallery: File[];
   skus: SkuCreateForm[];
+}
+export interface ProductUpdateForm {
+  id: string;
+  name: string;
+  slug: string;
+  brandId: string;
+  categoryId: string;
+  specs: Attribute[];
+  attributes: GroupCreateForm[];
+  warrantyMonth: number;
+  description: string;
+  shortDescription: string;
+  hasVariants: boolean;
+  thumbnail: File | null;
+  gallery: File[] | null;
+  skus: SkuUpdateForm[];
+}
+
+export interface SkuUpdateForm {
+  id: string;
+  image: File | null;
+  skuCode: string;
+  name: string;
+  price: number;
+  costPrice: number;
+  originalPrice: number;
+  active: boolean;
+  attributes: Val[];
 }
 
 export interface Product {
@@ -171,8 +201,8 @@ export interface SkuDetail {
   originalPrice: number;
   costPrice: number;
   thumbnail: Image;
-  active: boolean;
-  discontinued: boolean;
+  active: string;
+  discontinued: string;
   discontinuedReason: string;
   stock: number;
   soldCount: number;
@@ -183,6 +213,7 @@ export interface SkuSelect {
   valueId: string;
 }
 export interface ProductDetail {
+  id: string;
   name: string;
   slug: string;
   category: {
@@ -209,6 +240,10 @@ export interface ProductDetail {
   skus: SkuDetail[];
 }
 
+export interface DiscontinuedForm {
+  discontinued: boolean;
+  reason: string;
+}
 export interface OptionItem {
   id: string;
   value: string;

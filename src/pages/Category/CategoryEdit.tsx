@@ -40,6 +40,8 @@ import { slugify } from "../../utils/string";
 type ParentSelectOption = { value: string; label: string };
 
 const CategoryEdit = () => {
+  const idemKey = useMemo(() => crypto.randomUUID(), [])
+
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
@@ -345,7 +347,7 @@ const CategoryEdit = () => {
         fd.append("image", data.imageFile);
       }
 
-      const res = await updateCategory({ id, body: fd } as any).unwrap();
+      const res = await updateCategory({ id, idemKey: idemKey, body: fd } as any).unwrap();
       toast.success(res?.message ?? "Cập nhật danh mục thành công");
       setTimeout(() => navigate("/categories", { replace: true }), 1200);
     } catch (e: any) {

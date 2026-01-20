@@ -66,11 +66,14 @@ export const brandApi = createApi({
       }),
       invalidatesTags: [{ type: "Brands", id: "LIST" }],
     }),
-    updateBrand: builder.mutation<ApiResponse, { id: string; body: FormData }>({
-      query: ({ id, body }) => ({
+    updateBrand: builder.mutation<ApiResponse, { id: string; idemKey: string, body: FormData }>({
+      query: ({ id, body, idemKey }) => ({
         url: `/api/admin/catalog/brands/${id}`,
         method: "PUT",
         body,
+        headers: {
+          "Idempotency-Key": idemKey,
+        },
       }),
       invalidatesTags: [{ type: "Brands", id: "LIST" }],
     }),

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { FormProvider, useForm, type SubmitHandler } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
 import { RiSaveLine } from "react-icons/ri";
@@ -16,13 +16,14 @@ import AttributeTabs from "./AttributeTabs";
 import SKUTabs from "./SKUTabs";
 
 // Import types và api
-import type { ProductFormUI, ProductCreateForm, Attribute, Image, DataType } from "../../types/product.type";
+import type { ProductFormUI, ProductCreateForm, Attribute, Image, DataType, SkuSelect, VariantGroup, Val, ProductUpdateForm } from "../../types/product.type";
 import { useGetProductByIdQuery, useUpdateProductMutation } from "../../features/product/product.api";
 import { useLazyGetCategoryByIdQuery } from "../../features/category/category.api";
 
 const ProductEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const idemKey = useMemo(() => crypto.randomUUID(), [])
 
   // API Hooks
   const { data: productData, isLoading: isFetching } = useGetProductByIdQuery(id ?? "", { skip: !id });
@@ -48,18 +49,34 @@ const ProductEdit = () => {
     },
   });
 
-  const { handleSubmit, reset, watch, setValue } = methods;
+  const { handleSubmit, reset, watch } = methods;
   const hasVariants = watch("hasVariants");
-  const toImageUrl = (img?: string | Image | null): string | null => {
-    if (!img) return null;
-    if (typeof img === "string") return img;
-    return img.url ?? null;
-  };
-  const toGalleryUrls = (gallery?: Array<string | Image> | null): string[] => {
-    if (!gallery) return [];
-    return gallery
-      .map(toImageUrl)
-      .filter((x): x is string => Boolean(x));
+  const skuKeyFromAttrs = (attrs: Val[]) =>
+    [...attrs]
+      .sort((a, b) =>
+        `${a.groupId}:${a.id}`.localeCompare(`${b.groupId}:${b.id}`)
+      )
+      .map(a => `${a.groupId}:${a.id}`)
+      .join("|");
+  const valFromSelections = (selections: SkuSelect[], variantGroups: VariantGroup[]): Val[] => {
+    const map = new Map<string, { value: string; groupId: string }>();
+
+    variantGroups.forEach(g => {
+      g.values.forEach(v => {
+        map.set(v.id, { value: v.value, groupId: g.id });
+      });
+    });
+
+    return selections.map(s => {
+      const found = map.get(s.valueId);
+      return {
+        groupId: found?.groupId ?? s.groupId,
+        id: s.valueId,                 // ✅ id = valueId
+        value: found?.value ?? "",     // ✅ có value để render/name/skuCode
+        active: true,
+        isOldData: true,
+      };
+    });
   };
   // 1. Load dữ liệu và map vào Form
   useEffect(() => {
@@ -81,31 +98,32 @@ const ProductEdit = () => {
             dataType: item.dataType as DataType, // Cần hàm convert nếu type không khớp string
             options: (item.optionsValue ?? []).map(ot => ({ id: ot.id, value: ot.id, label: ot.label })),
           }));
-
-          // Map SKU Options (Nhóm biến thể: Màu sắc, Size...)
-          // Logic này giả định backend trả về structure Group[] trong productData.attributes (theo interface bạn gửi)
-          // Nếu backend không trả về group định nghĩa, bạn phải tự reduce từ list SKUs.
-
           // Map SKUs
-          const mappedSkus = productData.skus.map(sku => ({
-            ...sku,
-            key: sku.skuCode, // Dùng skuCode làm key tạm
-            id: sku.id,
-            skuCode: sku.skuCode,
-            image: sku.thumbnail.imageUrl, // URL ảnh (string)
-            name: sku.name,
-            price: sku.price,
-            costPrice: sku.costPrice,
-            originalPrice: sku.originalPrice,
-            active: sku.active,
-            discontinued: sku.discontinued,
-            stock: sku.stock,
-            attributes: sku.selections
-          }));
-          console.log(productData);
-          
+          const mappedSkus = productData.skus.map(sku => {
+            const attrs = valFromSelections(sku.selections, productData.variantGroups);
+            return ({
+              ...sku,
+              key: skuKeyFromAttrs(attrs), // Dùng skuCode làm key tạm
+              id: sku.id,
+              skuCode: sku.skuCode,
+              image: sku.thumbnail.imageUrl, // URL ảnh (string)
+              name: sku.name,
+              price: sku.price,
+              costPrice: sku.costPrice,
+              originalPrice: sku.originalPrice,
+              active: sku.active == "ACTIVE",
+              discontinued: !!sku.discontinued,
+              stock: sku.stock,
+              attributes: attrs
+
+            })
+          })
+
+
+
           // Reset form
           reset({
+            id: productData.id,
             name: productData.name,
             slug: productData.slug,
             brandId: productData.brand.id,
@@ -143,28 +161,84 @@ const ProductEdit = () => {
               displayOrder: it.displayOrder
             })), // Giá trị thông số kỹ thuật
             attributeOptions: mappedAttributeOptions, // Cấu hình thông số
-            bulk: {price: 0, costPrice: 0, originalPrice: 0, stock: 0},
+            bulk: { price: 0, costPrice: 0, originalPrice: 0, stock: 0 },
             skus: mappedSkus, // Danh sách biến thể chi tiết
 
           });
 
         } catch (error) {
           console.log(error);
-          
+
           toast.error("Lỗi khi tải dữ liệu sản phẩm");
         }
       };
       loadInitData();
     }
   }, [productData, reset, getCategoryDetail]);
+  const prepareSpecs = (rawAttributes: Attribute[]) => {
+    return rawAttributes.map(attr => {
+      let finalValue = attr.value;
 
+      // Logic giữ type (Ví dụ minh họa)
+      if (Array.isArray(attr.value)) {
+        // Nếu là mảng ["HDMI", "USB"], giữ nguyên
+        finalValue = attr.value;
+      } else if (attr.value === "true" || attr.value === "false") {
+        // Convert string "true" -> boolean true
+        finalValue = (attr.value === "true");
+      } else if (!isNaN(Number(attr.value)) && attr.value !== "") {
+        // Convert string "12" -> number 12
+        finalValue = Number(attr.value);
+      }
+
+      // Trả về object sạch
+      return {
+        id: attr.id,
+        code: attr.code,
+        label: attr.label,
+        dataType: attr.dataType,
+        unit: attr.unit,
+        displayOrder: attr.displayOrder,
+        value: finalValue
+      };
+    });
+  };
   // 2. Xử lý Submit (Tương tự Create nhưng logic FormData khác một chút với File/String)
   const onSubmit: SubmitHandler<ProductFormUI> = async (data) => {
     if (!id) return;
     try {
+      const skus = data.skus.map(item => ({
+        id: item.id,
+        name: item.name,
+        skuCode: item.skuCode,
+        price: item.price,
+        costPrice: item.costPrice,
+        originalPrice: item.originalPrice,
+        stock: item.stock,
+        active: item.active,
+        attributes: item.attributes,
+        image: item.image instanceof File ? item.image : null
+      }))
+      const payload: ProductUpdateForm = {
+        id: data.id ?? id,
+        name: data.name.trim(),
+        slug: data.slug.trim(),
+        brandId: data.brandId,
+        categoryId: data.category.id,
+        specs: data.attributes,
+        hasVariants: data.hasVariants,
+        description: data.description,
+        shortDescription: data.shortDescription.trim(),
+        warrantyMonth: data.warrantyMonth,
+        attributes: data.skuOptions.filter(at => at.values.length > 0),
+        thumbnail: data.image instanceof File ? data.image : null,
+        gallery: (data.gallery ?? []).filter((x): x is File => x instanceof File),
+        skus: skus,
+      }
       const fd = new FormData();
 
       // Các trường cơ bản
+      fd.append("id", data.id?.trim() ?? id)
       fd.append("name", data.name.trim());
       fd.append("slug", data.slug.trim());
       fd.append("brandId", data.brandId);
@@ -173,78 +247,63 @@ const ProductEdit = () => {
       fd.append("shortDescription", data.shortDescription);
       fd.append("warrantyMonth", String(data.warrantyMonth));
       fd.append("hasVariants", String(data.hasVariants));
-
+      const specsToSend = prepareSpecs(payload.specs);
       // Specs (JSON)
       // Cần hàm prepareSpecs giống ProductCreate
-      const specsToSend = data.attributes.map(attr => ({
-        id: attr.id,
-        value: attr.value // Backend tự xử lý type dựa trên metadata
-      }));
       fd.append("specs", JSON.stringify(specsToSend));
-
-      // Attributes (Sku Options definition)
-      data.skuOptions.forEach((at, index) => {
-        fd.append(`attributes[${index}].groupId`, at.id);
-        fd.append(`attributes[${index}].label`, at.name);
-        at.values.forEach((a, indexA) => {
-          fd.append(`attributes[${index}].values[${indexA}].id`, a.id);
-          fd.append(`attributes[${index}].values[${indexA}].value`, a.value);
+      if (payload.thumbnail instanceof File) {
+        fd.append("thumbnail", payload.thumbnail);
+      }
+      if (payload.gallery && payload.gallery.length > 0) {
+        payload.gallery.forEach(file => {
+          fd.append("newGalleryImages", file);
         });
+      }
+      const productGalleryUrl = productData?.gallery
+      const keptGalleryImageUrl = new Set((data.gallery ?? [])
+        .filter(x => typeof x == "string"))
+      const keptGalleryImageIds = productGalleryUrl?.filter(
+        gl => keptGalleryImageUrl.has(gl.imageUrl)
+      ).map(gl => gl.imagePublicId)
+      keptGalleryImageIds?.forEach(id => {
+        fd.append("keptGalleryImageIds", id);
       });
+      payload.attributes.forEach((at, index) => {
+        fd.append(`attributes[${index}].id`, at.id)
+        fd.append(`attributes[${index}].label`, at.name)
+        at.values.forEach((a, indexA) => {
+          fd.append(`attributes[${index}].values[${indexA}].id`, a.id)
+          fd.append(`attributes[${index}].values[${indexA}].value`, a.value)
+          fd.append(`attributes[${index}].values[${indexA}].active`, JSON.stringify(a.active))
+        })
+      })
 
-      // Thumbnail: Chỉ gửi nếu là File mới
-      if (data.image instanceof File) {
-        fd.append("thumbnail", data.image);
-      }
+      payload.skus.forEach((sku, index) => {
+        fd.append(`skus[${index}].id`, sku.id);
+        fd.append(`skus[${index}].code`, sku.skuCode);
+        fd.append(`skus[${index}].name`, sku.name);
+        fd.append(`skus[${index}].price`, String(sku.price));
+        fd.append(`skus[${index}].costPrice`, String(sku.costPrice));
+        fd.append(`skus[${index}].active`, String(sku.active));
+        fd.append(`skus[${index}].originalPrice`, String(sku.originalPrice));
+        sku.attributes.forEach((op, indexOp) => {
+          fd.append(`skus[${index}].specs[${indexOp}].id`, String(op.id))
+          fd.append(`skus[${index}].specs[${indexOp}].groupId`, String(op.groupId))
+        })
+        if (sku.image) {
+          fd.append(`skus[${index}].image`, sku.image);
+        }
+      })
 
-      // Gallery: Chỉ gửi File mới, URL cũ backend tự giữ (hoặc logic xóa ảnh cũ tùy API)
-      if (data.gallery && data.gallery.length > 0) {
-        data.gallery.forEach((item) => {
-          if (item instanceof File) {
-            // 1. Nếu là File (ảnh mới upload) -> Thêm vào newGalleryImages
-            fd.append("newGalleryImages", item);
-          } else if (typeof item === 'object' && 'imagePublicId' in item) {
-            // 2. Nếu là Object Image cũ -> Lấy PublicId thêm vào keptGalleryImageIds
-            // Backend sẽ dựa vào thứ tự list này để sắp xếp
-            fd.append("keptGalleryImageIds", item.imagePublicId);
-          }
-        });
-      }
 
       // SKUs
       // Lưu ý: Logic update SKU thường phức tạp (thêm/sửa/xóa). 
       // Ở đây giả định gửi đè toàn bộ hoặc backend handle theo skuCode/id.
-      if (!data.hasVariants) {
-        // Logic Simple Product
-        fd.append("price", String(data.price));
-        fd.append("stock", String(data.stock));
-        // ... các trường khác
-      } else {
-        data.skus.forEach((sku, index) => {
-          fd.append(`skus[${index}].code`, sku.skuCode);
-          fd.append(`skus[${index}].name`, sku.name);
-          fd.append(`skus[${index}].price`, String(sku.price));
-          fd.append(`skus[${index}].stock`, String(sku.stock));
-          // ... các trường khác
 
-          // Specs của SKU
-          sku.attributes.forEach((op, indexOp) => {
-            fd.append(`skus[${index}].specs[${indexOp}].id`, String(op.id));
-            fd.append(`skus[${index}].specs[${indexOp}].value`, String(op.value));
-            fd.append(`skus[${index}].specs[${indexOp}].groupId`, String(op.groupId));
-          });
 
-          // Ảnh SKU: Chỉ gửi nếu là File
-          if (sku.image instanceof File) {
-            fd.append(`skus[${index}].image`, sku.image);
-          }
-        });
-      }
-
-      await updateProduct({ id, data: fd }).unwrap();
+      await updateProduct({ id, idemKey: idemKey, body: fd }).unwrap();
       toast.success("Cập nhật sản phẩm thành công");
-      navigate("/products");
-
+      setTimeout(() => navigate("/products", { replace: true }), 1200);
     } catch (error: any) {
       toast.error(error?.data?.message ?? "Lỗi cập nhật sản phẩm");
     }

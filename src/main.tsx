@@ -57,6 +57,9 @@ import OrderManagement from "./pages/Order/OrderManagement";
 import OrderDetail from "./pages/Order/OrderDetail";
 import OrderEdit from "./pages/Order/OrderEdit";
 import UserManagement from "./pages/User/UserManagement";
+import InventoryManagement from "./pages/inventory/InventoryManagement";
+import ReviewManagement from "./pages/Review/ReviewManagement";
+import ProfilePage from "./pages/Profile/ProfilePage";
 const router = createBrowserRouter([
   {
     element: (
@@ -105,14 +108,18 @@ const router = createBrowserRouter([
           { path: "categories/view/:id", element: <CategoryDetail /> },
           { path: "categories/edit/:id", element: <CategoryEdit /> },
           { path: "attributes", element: <AttributeManagement /> },
-          {path: "attributes/create", element: <AttributeCreate />},
-          {path: "attributes/edit/:id", element: <AttributeEdit />},
-          {path: "attributes/view/:id", element: <AttributeDetail />},
-          {path: "users", element: <UserManagement />},
+          { path: "attributes/create", element: <AttributeCreate /> },
+          { path: "attributes/edit/:id", element: <AttributeEdit /> },
+          { path: "attributes/view/:id", element: <AttributeDetail /> },
+          { path: "users", element: <UserManagement /> },
           { path: "brands", element: <BrandManagement /> },
-          {path: "brands/create", element: <BrandCreate />},
-          {path: "brands/edit/:id", element: <BrandEdit />},
-          {path: "brands/view/:id", element: <BrandDetail />}
+          { path: "brands/create", element: <BrandCreate /> },
+          { path: "brands/edit/:id", element: <BrandEdit /> },
+          { path: "brands/view/:id", element: <BrandDetail /> },
+          { path: "inventories", element: <InventoryManagement /> },
+          { path: "reviews", element: <ReviewManagement /> },
+          { path: "profile", element: <ProfilePage /> },
+
         ]
       }
     ],

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import type { BrandEditFormUI, StatusKey } from '../../types/brand.type'
 import { useGetBrandByIdQuery, useUpdateBrandMutation } from '../../features/brand/brand.api'
@@ -32,6 +32,8 @@ const optionsStatus: Record<StatusKey, {
 };
 
 const BrandEdit = () => {
+  const idemKey = useMemo(() => crypto.randomUUID(), [])
+
   const navigate = useNavigate();
   const { id: brandId } = useParams<{ id: string }>()
 
@@ -82,7 +84,7 @@ const BrandEdit = () => {
       const fd = new FormData();
       fd.append("data", new Blob([JSON.stringify(data)], { type: "application/json" }))
       fd.append("logo", data.logo ?? "")
-      const res = await updateBrand({ id: brandId ?? "", body: fd }).unwrap()
+      const res = await updateBrand({ id: brandId ?? "", idemKey: idemKey, body: fd }).unwrap()
       toast.success(res?.message ?? "Tạo danh mục thành công");
       setTimeout(() => navigate("/brands", { replace: true }), 1200);
     } catch (error: any) {

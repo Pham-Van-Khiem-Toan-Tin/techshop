@@ -1,4 +1,4 @@
-import { useLocation } from "react-router";
+import { Link, useLocation } from "react-router";
 import { RiLoginBoxLine, RiLogoutBoxLine, RiMapPinUserLine, RiNotification3Fill } from "react-icons/ri";
 import '@szhsin/react-menu/dist/index.css';
 import '@szhsin/react-menu/dist/transitions/zoom.css';
@@ -36,7 +36,7 @@ const Topbar = () => {
                 <input className="form-control form-control-sm" placeholder="Search..." style={{ width: 260 }} />
             </div>
             <div className="d-flex align-items-center gap-4 me-3">
-                <button ref={target} onClick={() => setShow(!show)} className="btn-app btn-app--outline position-relative border-0 p-2">
+                {/* <button ref={target} onClick={() => setShow(!show)} className="btn-app btn-app--outline position-relative border-0 p-2">
                     <RiNotification3Fill className="fs-4" />
                     <span className="position-absolute top-10 start-100 translate-middle badge rounded-pill bg-danger">
                         99+
@@ -52,7 +52,7 @@ const Topbar = () => {
                             My Tooltip
                         </Tooltip>
                     )}
-                </Overlay>
+                </Overlay> */}
                 <span>{user?.userName}</span>
                 <button className="avatar" type="button" ref={ref} {...anchorProps}>
                     <Avatar size="sm" src={DefaultAvatar} alt="avatar" />
@@ -66,10 +66,10 @@ const Topbar = () => {
                         ? (
                             <>
                                 <MenuItem>
-                                    <div className="d-flex align-items-center gap-2">
+                                    <Link to="/profile" className="d-flex align-items-center gap-2">
                                         <RiMapPinUserLine />
                                         <span>Hồ sơ</span>
-                                    </div></MenuItem>
+                                    </Link></MenuItem>
                                 <MenuItem>
                                     <div className="d-flex align-items-center gap-2" onClick={() => dispatch(logout())}>
                                         <RiLogoutBoxLine />

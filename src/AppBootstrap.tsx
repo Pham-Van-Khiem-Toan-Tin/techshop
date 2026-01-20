@@ -3,7 +3,7 @@ import { fetchMe } from "./features/auth/auth.slice";
 import { useAppDispatch, useAppSelector } from "./store/hook";
 import Loading from "./components/common/Loading";
 import { Navigate, useLocation } from "react-router";
-export default function AppBootstrap({ children }: { children: React.ReactNode }) {
+export default function AppBootstrap({ children }: Readonly<{ children: React.ReactNode }>) {
   const dispatch = useAppDispatch();
   const status = useAppSelector((s) => s.auth.status);
   const location = useLocation();

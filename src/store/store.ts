@@ -9,6 +9,9 @@ import { brandApi } from "../features/brand/brand.api";
 import { productApi } from "../features/product/product.api";
 import { orderApi } from "../features/order/order.api";
 import { orderStatsApi } from "../features/order/order-stats.api";
+import { inventoryApi } from "../features/inventory/inventory.api";
+import { reviewApi } from "../features/review/review.api";
+import { userAdminApi } from "../features/user/user.api";
 
 export const store = configureStore({
   reducer: {
@@ -22,6 +25,9 @@ export const store = configureStore({
     [productApi.reducerPath]: productApi.reducer,
     [orderApi.reducerPath]: orderApi.reducer,
     [orderStatsApi.reducerPath]: orderStatsApi.reducer,
+    [inventoryApi.reducerPath]: inventoryApi.reducer,
+    [reviewApi.reducerPath]: reviewApi.reducer,
+    [userAdminApi.reducerPath]: userAdminApi.reducer
   },
   middleware: (gDf) =>
     gDf().concat(
@@ -34,6 +40,9 @@ export const store = configureStore({
       productApi.middleware,
       orderApi.middleware,
       orderStatsApi.middleware,
+      inventoryApi.middleware,
+      reviewApi.middleware,
+      userAdminApi.middleware
     ),
 });
 

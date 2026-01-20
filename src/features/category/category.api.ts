@@ -88,12 +88,15 @@ export const categoryApi = createApi({
     }),
     updateCategory: builder.mutation<
       ApiResponse,
-      { id: string; body: FormData }
+      { id: string; idemKey: string, body: FormData }
     >({
-      query: ({ id, body }) => ({
+      query: ({ id, idemKey, body }) => ({
         url: `/api/admin/catalog/categories/${id}`,
         method: "PUT",
         body,
+        headers: {
+          "Idempotency-Key": idemKey,
+        },
       }),
       invalidatesTags: [{ type: "Categories", id: "LIST" }],
     }),

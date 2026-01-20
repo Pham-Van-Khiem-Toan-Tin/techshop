@@ -1,5 +1,6 @@
 import { AiOutlineLaptop, AiOutlineProduct } from "react-icons/ai";
 import { BsTags } from "react-icons/bs";
+import { MdOutlineInventory2 } from "react-icons/md";
 import {
   RiDashboardLine,
   RiUserLine,
@@ -108,5 +109,6 @@ export const optionIcons: IconOption[] = [
   { value: "TfiMedall", label: "Thương hiệu", Icon: TfiMedall },
   { value: "AiOutlineProduct", label: "Đơn hàng", Icon: AiOutlineProduct },
   { value: "TbDevicesPc", label: "Máy tính để bàn", Icon: TbDevicesPc },
+  { value: "MdOutlineInventory2", label: "Tồn kho", Icon: MdOutlineInventory2 },
 
 ];

@@ -13,11 +13,11 @@ import AttributeTabs from "./AttributeTabs";
 import SKUTabs from "./SKUTabs";
 import { useCreateProductMutation } from "../../features/product/product.api";
 import { toast } from "react-toastify";
-import { useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 const ProductCreate = () => {
     const navigate = useNavigate();
-    const idemRef = useRef<string | null>(null)
+    const idemKey = useMemo(() => crypto.randomUUID(), [])
     const methods = useForm<ProductFormUI>({
         defaultValues: {
             name: "",
@@ -34,6 +34,7 @@ const ProductCreate = () => {
         },
         shouldUnregister: false
     });
+
     const {
         handleSubmit,
         control
@@ -42,19 +43,16 @@ const ProductCreate = () => {
     const [createProduct, { isLoading }] = useCreateProductMutation()
     const onSubmit: SubmitHandler<ProductFormUI> = async (data: ProductFormUI) => {
         try {
-            if (!idemRef.current) {
-                idemRef.current = crypto.randomUUID();
-            }
             const hasVariants = data.hasVariants;
             let skus: SkuCreateForm[] = [];
             if (!hasVariants) {
                 skus = [{
                     name: data.name,
                     skuCode: data.slug,
-                    price: data.price,
-                    costPrice: data.costPrice,
-                    originalPrice: data.originalPrice,
-                    stock: data.stock,
+                    price: data.price ?? 0,
+                    costPrice: data.costPrice ?? 0,
+                    originalPrice: data.originalPrice ?? 0,
+                    stock: data.stock ?? 0,
                     active: true,
                     attributes: [],
                     image: null
@@ -69,7 +67,7 @@ const ProductCreate = () => {
                     stock: item.stock,
                     active: item.active,
                     attributes: item.attributes,
-                    image: item.image
+                    image: item.image as File ? item.image : null
                 }))
             }
 
@@ -88,9 +86,9 @@ const ProductCreate = () => {
                 gallery: data.gallery as File[],
                 skus: skus,
             }
-            
-            console.log({payload});
-            
+
+            console.log({ payload });
+
             const fd = new FormData()
             fd.append("name", payload.name)
             fd.append("slug", payload.slug)
@@ -100,8 +98,8 @@ const ProductCreate = () => {
             fd.append("shortDescription", payload.shortDescription)
             fd.append("warrantyMonth", String(payload.warrantyMonth))
             fd.append("hasVariants", String(payload.hasVariants))
-            const specsToSend = prepareSpecs(payload.specs); 
-            
+            const specsToSend = prepareSpecs(payload.specs);
+
             fd.append("specs", JSON.stringify(specsToSend))
             payload.attributes.forEach((at, index) => {
                 fd.append(`attributes[${index}].id`, at.id)
@@ -132,7 +130,7 @@ const ProductCreate = () => {
                     fd.append(`skus[${index}].image`, sku.image);
                 }
             })
-            const res = await createProduct({idemKey: idemRef.current, body: fd}).unwrap();
+            const res = await createProduct({ idemKey, body: fd }).unwrap();
             toast.success(res?.message ?? "Tạo sản phẩm thành công");
 
             setTimeout(() => navigate("/products", { replace: true }), 1200);
@@ -162,7 +160,7 @@ const ProductCreate = () => {
                 code: attr.code,
                 label: attr.label,
                 dataType: attr.dataType,
-                unit: attr.dataType,
+                unit: attr.unit,
                 displayOrder: attr.displayOrder,
                 value: finalValue
             };
@@ -200,7 +198,8 @@ const ProductCreate = () => {
                     </div>
                 </div>
                 <FormProvider {...methods} >
-                    <form id="product-form" className="form-app pt-4" onSubmit={handleSubmit(onSubmit)}>
+                    <form id="product-form" className="form-app pt-4"
+                        onSubmit={handleSubmit(onSubmit)}>
                         <fieldset disabled={isLoading}>
                             <Tabs forceRenderTabPanel>
                                 <TabList className="px-4 tablist">

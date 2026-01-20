@@ -2,7 +2,11 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQuery } from "../../lib/baseQuery";
 import type { ApiResponse } from "../../types/api.type";
 import type { Page } from "../../types/page.type";
-import type { Product, ProductDetail } from "../../types/product.type";
+import type {
+  DiscontinuedForm,
+  Product,
+  ProductDetail,
+} from "../../types/product.type";
 
 export const productApi = createApi({
   reducerPath: "productApi",
@@ -42,24 +46,52 @@ export const productApi = createApi({
       providesTags: (result, error, id) => [{ type: "Product", id }],
       keepUnusedDataFor: 0,
     }),
-    createProduct: builder.mutation<ApiResponse,{idemKey: string, body: FormData}>({
-      query: ({idemKey, body}) => ({
+    createProduct: builder.mutation<
+      ApiResponse,
+      { idemKey: string; body: FormData }
+    >({
+      query: ({ idemKey, body }) => ({
         url: "/api/admin/catalog/products",
         method: "POST",
         body,
         headers: {
-          'Idempotency-Key': idemKey,
-        }
+          "Idempotency-Key": idemKey,
+        },
       }),
       invalidatesTags: [{ type: "Products", id: "LIST" }],
     }),
-    updateProduct: builder.mutation<ApiResponse, { id: string , body: FormData}>({
-      query: ({id, body}) => ({
-        url: `/api/admin/catalog/products${id}`,
+    updateProduct: builder.mutation<
+      ApiResponse,
+      { id: string; idemKey: string; body: FormData }
+    >({
+      query: ({ id, idemKey, body }) => ({
+        url: `/api/admin/catalog/products/${id}`,
         method: "PUT",
         body,
+        headers: {
+          "Idempotency-Key": idemKey,
+        },
       }),
       invalidatesTags: [{ type: "Products", id: "LIST" }],
+    }),
+    discontinuedSku: builder.mutation<
+      ApiResponse<string>,
+      { id: string; idemKey: string; body: DiscontinuedForm }
+    >({
+      query: ({ id, idemKey, body }) => ({
+        url: `/api/admin/catalog/products/sku/${id}/discontinued`,
+        method: "PATCH",
+        body,
+        headers: {
+          "Idempotency-Key": idemKey,
+        },
+      }),
+      invalidatesTags: (result, error, arg) => [
+        { type: "Products", id: "LIST" },
+        ...(result?.data
+          ? [{ type: "Product" as const, id: result.data }]
+          : []),
+      ],
     }),
     deleteProduct: builder.mutation<ApiResponse, string>({
       query: (id) => ({
@@ -73,9 +105,11 @@ export const productApi = createApi({
   refetchOnReconnect: true,
 });
 
-export const { 
+export const {
   useGetAllProductQuery,
   useUpdateProductMutation,
   useGetProductByIdQuery,
   useDeleteProductMutation,
-  useCreateProductMutation } = productApi;
+  useCreateProductMutation,
+  useDiscontinuedSkuMutation,
+} = productApi;

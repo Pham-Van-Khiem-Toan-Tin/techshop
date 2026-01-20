@@ -9,13 +9,11 @@ import {
 import type { Column } from '../../types/table.type';
 import Pagination from '../../components/common/Pagination';
 import DataTable from '../../components/common/DataTable';
-import { RiDeleteBin6Line, RiEditLine, RiEyeLine } from 'react-icons/ri';
+import {  RiEditLine, RiEyeLine } from 'react-icons/ri';
 import { FilterIndicator } from "../../components/common/FilterIndicator ";
 import { SortIndicator } from "../../components/common/SortIndicator ";
 import type { Page } from "../../types/page.type";
 import { Link, useNavigate } from 'react-router';
-import { toast } from "react-toastify";
-import { Modal } from "react-bootstrap";
 import { useGetAllOrderQuery } from "../../features/order/order.api";
 import type { Order } from "../../types/order.type";
 const SIZE_OPTIONS = [10, 25, 50, 100] as const;
