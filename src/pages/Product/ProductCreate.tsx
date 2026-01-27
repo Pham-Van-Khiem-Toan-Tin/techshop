@@ -13,10 +13,12 @@ import AttributeTabs from "./AttributeTabs";
 import SKUTabs from "./SKUTabs";
 import { useCreateProductMutation } from "../../features/product/product.api";
 import { toast } from "react-toastify";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const ProductCreate = () => {
     const navigate = useNavigate();
+    const [isLoadingTimeOut, setIsLoadingTimeOut] = useState<boolean>(false)
+
     const idemKey = useMemo(() => crypto.randomUUID(), [])
     const methods = useForm<ProductFormUI>({
         defaultValues: {
@@ -133,7 +135,10 @@ const ProductCreate = () => {
             const res = await createProduct({ idemKey, body: fd }).unwrap();
             toast.success(res?.message ?? "Tạo sản phẩm thành công");
 
-            setTimeout(() => navigate("/products", { replace: true }), 1200);
+            setTimeout(() => {
+                navigate("/products", { replace: true })
+                setIsLoadingTimeOut(false)
+            }, 1200);
         } catch (error: any) {
             toast.error(error?.data?.message ?? "Có lỗi xảy ra");
         }
@@ -166,6 +171,8 @@ const ProductCreate = () => {
             };
         });
     };
+    const isDisablePage = isLoading || isLoadingTimeOut
+
     return (
         <div className="d-flex align-items-center justify-content-center">
             <div className="border-app--rounded bg-white m-4 py-4" style={{ width: "1000px" }}>
@@ -179,7 +186,7 @@ const ProductCreate = () => {
                         <button
                             className="btn-app btn-app--ghost btn-app--sm"
                             onClick={() => navigate(-1)}
-                            // disabled={isCreating}
+                            disabled={isDisablePage}
                             type="button"
                         >
                             Hủy
@@ -189,7 +196,7 @@ const ProductCreate = () => {
                             type="submit"
                             form="product-form"
                             className="btn-app btn-app--sm d-flex align-items-center gap-2"
-                        // disabled={isCreating}
+                            disabled={isDisablePage}
                         >
                             <RiSaveLine />
                             Lưu
@@ -221,10 +228,10 @@ const ProductCreate = () => {
                                     </Tab>
                                 </TabList>
                                 <TabPanel>
-                                    <GeneralTabs />
+                                    <GeneralTabs updating={isDisablePage} />
                                 </TabPanel>
                                 <TabPanel>
-                                    <AttributeTabs />
+                                    <AttributeTabs updating={isDisablePage} />
                                 </TabPanel>
                                 {
                                     hasVariants && (
@@ -234,7 +241,7 @@ const ProductCreate = () => {
                                     )
                                 }
                                 <TabPanel>
-                                    <DescriptionTabs />
+                                    <DescriptionTabs updating={isDisablePage} />
                                 </TabPanel>
                             </Tabs>
                         </fieldset>

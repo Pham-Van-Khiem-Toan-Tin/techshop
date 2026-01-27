@@ -21,6 +21,7 @@ export interface InventoryHistory {
 export type AdjustType = "IMPORT" | "EXPORT" | "ADJUST";
 export interface AdjustForm {
   type: AdjustType;
-  quantity: string; // giữ string để nhập dễ + validate
-  note: string;
+  quantity?: string; // Giữ lại cho loại ADJUST (set tồn)
+  serialNumbers?: string; // Dùng cho IMPORT/EXPORT dạng text
+  note?: string;
 }

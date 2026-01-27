@@ -11,7 +11,7 @@ interface ProfileInputs {
 
 const ProfilePage = () => {
     const [isEditing, setIsEditing] = useState(false);
-    
+
     // 1. Hook lấy dữ liệu và Mutation cập nhật
     const { data: profile, isLoading } = useGetProfileQuery();
     const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
@@ -49,25 +49,25 @@ const ProfilePage = () => {
                 <div className="d-flex justify-content-between align-items-center mb-4">
                     <h5 className="fw-bold mb-0">Hồ sơ của tôi</h5>
                     {!isEditing ? (
-                        <button 
-                            type="button" 
-                            className="btn btn-sm btn-outline-primary px-3 rounded-pill" 
+                        <button
+                            type="button"
+                            className="btn-app btn-app--ghost px-3 rounded-pill"
                             onClick={() => setIsEditing(true)}
                         >
                             Chỉnh sửa
                         </button>
                     ) : (
                         <div className="d-flex gap-2">
-                            <button 
-                                type="submit" 
-                                className="btn btn-sm btn-primary px-4 rounded-pill" 
+                            <button
+                                type="submit"
+                                className="btn-app px-4 rounded-pill"
                                 disabled={isUpdating}
                             >
                                 {isUpdating ? 'Đang lưu...' : 'Lưu'}
                             </button>
-                            <button 
-                                type="button" 
-                                className="btn btn-sm btn-light px-3 rounded-pill" 
+                            <button
+                                type="button"
+                                className="btn-app btn-app--outline px-3 rounded-pill"
                                 onClick={() => {
                                     setIsEditing(false);
                                     reset(); // Khôi phục lại dữ liệu cũ
@@ -79,13 +79,14 @@ const ProfilePage = () => {
                     )}
                 </div>
 
-                <div className="row g-4">
+                <div className="row g-4 form-app flex-row gap-0">
                     {/* Họ */}
                     <div className="col-md-6">
-                        <label className="form-label small fw-bold text-muted">Họ</label>
+                        <label htmlFor='firstName' className="form-label small fw-bold text-muted">Họ</label>
                         <input
+                            id='firstName'
                             {...register("firstName", { required: "Họ không được để trống" })}
-                            className={`form-control ${errors.firstName ? 'is-invalid' : ''} ${!isEditing ? 'bg-light border-0' : ''}`}
+                            className={`form-control ${errors.firstName ? 'is-invalid' : ''}`}
                             disabled={!isEditing}
                         />
                         {errors.firstName && <div className="invalid-feedback">{errors.firstName.message}</div>}
@@ -96,7 +97,7 @@ const ProfilePage = () => {
                         <label className="form-label small fw-bold text-muted">Tên</label>
                         <input
                             {...register("lastName", { required: "Tên không được để trống" })}
-                            className={`form-control ${errors.lastName ? 'is-invalid' : ''} ${!isEditing ? 'bg-light border-0' : ''}`}
+                            className={`form-control ${errors.lastName ? 'is-invalid' : ''}`}
                             disabled={!isEditing}
                         />
                         {errors.lastName && <div className="invalid-feedback">{errors.lastName.message}</div>}
@@ -105,20 +106,20 @@ const ProfilePage = () => {
                     {/* Email (Chỉ xem) */}
                     <div className="col-12">
                         <label className="form-label small fw-bold text-muted">Email</label>
-                        <input className="form-control bg-light border-0" value={profile?.email} disabled />
+                        <input className="form-control bg-light" value={profile?.email} disabled />
                     </div>
 
                     {/* Số điện thoại */}
                     <div className="col-12">
                         <label className="form-label small fw-bold text-muted">Số điện thoại</label>
                         <input
-                            {...register("phone", { 
+                            {...register("phone", {
                                 pattern: {
                                     value: /^[0-9]{10}$/,
                                     message: "Số điện thoại phải có 10 chữ số"
                                 }
                             })}
-                            className={`form-control ${errors.phone ? 'is-invalid' : ''} ${!isEditing ? 'bg-light border-0' : ''}`}
+                            className={`form-control ${errors.phone ? 'is-invalid' : ''}`}
                             placeholder="Chưa có số điện thoại"
                             disabled={!isEditing}
                         />

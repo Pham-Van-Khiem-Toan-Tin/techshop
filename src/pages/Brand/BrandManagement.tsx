@@ -79,7 +79,7 @@ const BrandManagement = () => {
     const rows: Brand[] = data?.content ?? [];
     const totalPages = Math.max(
         1,
-        Math.ceil(((data as Page<Brand>)?.total ?? 0) / size)
+        Math.ceil(((data as Page<Brand>)?.page?.totalElements ?? 0) / size)
     );
     useEffect(() => {
         if (uiPage > totalPages) setQuery({ page: totalPages });
@@ -275,7 +275,7 @@ const BrandManagement = () => {
                     totalPages={totalPages}
                     onChange={(nextUiPage) => setQuery({ page: nextUiPage })}
                     variant="basic"
-                    totalElement={data?.total}
+                    totalElement={data?.page?.totalElements}
                     showRowsPerPage
                     rowsPerPage={size}
                     rowsPerPageOptions={[...SIZE_OPTIONS]}

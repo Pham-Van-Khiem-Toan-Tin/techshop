@@ -458,7 +458,7 @@ const SKUTabs = ({ mode }: { mode: "create" | "edit" }) => {
                                     <div>
                                         <div className='d-flex align-items-center justify-content-between'>
                                             <label htmlFor={"name" + index} className='f-body-sm fw-bold'>Tên nhóm phân loại {index + 1}</label>
-                                            {fields.length > 1 && (fields.flatMap(it => it.values).some(it => !it.isOldData) || mode == "create") &&
+                                            {(mode == "create" && fields.length > 1) && fields.flatMap(it => it.values).some(it => !it.isOldData) &&
                                                 <button type='button' onClick={() => deleteItemGroup(index)} className='btn btn-secondary border-0 bg-transparent text-secondary'>
                                                     <RiDeleteBin6Line />
                                                 </button>}

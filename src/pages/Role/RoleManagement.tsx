@@ -85,7 +85,7 @@ const RoleManagement = () => {
   const rows: Role[] = data?.content ?? [];
   const totalPages = Math.max(
     1,
-    Math.ceil(((data as Page<Role>)?.total ?? 0) / size)
+    Math.ceil(((data as Page<Role>)?.totalElements ?? 0) / size)
   );
 
   // nếu URL page vượt quá totalPages (sau khi có data) thì sửa URL về trang cuối
@@ -254,7 +254,7 @@ const RoleManagement = () => {
         <Pagination
           page={uiPage}
           totalPages={totalPages}
-          totalElement={data?.total}
+          totalElement={data?.totalElements}
           onChange={(nextUiPage) => setQuery({ page: nextUiPage })}
           variant="basic"
           showRowsPerPage

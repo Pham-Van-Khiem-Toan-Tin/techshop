@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FormProvider, useForm, type SubmitHandler } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
 import { RiSaveLine } from "react-icons/ri";
@@ -24,7 +24,7 @@ const ProductEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const idemKey = useMemo(() => crypto.randomUUID(), [])
-
+  const [isLoadingTimeOut, setIsLoadingTimeOut] = useState<boolean>(false)
   // API Hooks
   const { data: productData, isLoading: isFetching } = useGetProductByIdQuery(id ?? "", { skip: !id });
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
@@ -300,15 +300,18 @@ const ProductEdit = () => {
       // Lưu ý: Logic update SKU thường phức tạp (thêm/sửa/xóa). 
       // Ở đây giả định gửi đè toàn bộ hoặc backend handle theo skuCode/id.
 
-
+      setIsLoadingTimeOut(true)
       await updateProduct({ id, idemKey: idemKey, body: fd }).unwrap();
       toast.success("Cập nhật sản phẩm thành công");
-      setTimeout(() => navigate("/products", { replace: true }), 1200);
+      setTimeout(() => {
+        navigate("/products", { replace: true })
+        setIsLoadingTimeOut(false)
+      }, 1200);
     } catch (error: any) {
       toast.error(error?.data?.message ?? "Lỗi cập nhật sản phẩm");
     }
   };
-
+  const isDisablePage = isFetching || isUpdating || isLoadingTimeOut
   if (isFetching) return <div className="text-center p-5">Đang tải dữ liệu...</div>;
 
   return (
@@ -332,7 +335,7 @@ const ProductEdit = () => {
               type="submit"
               form="product-edit-form"
               className="btn-app btn-app--sm d-flex align-items-center gap-2"
-              disabled={isUpdating}
+              disabled={isDisablePage}
             >
               <RiSaveLine />
               {isUpdating ? "Đang lưu..." : "Lưu thay đổi"}
@@ -342,7 +345,7 @@ const ProductEdit = () => {
 
         <FormProvider {...methods}>
           <form id="product-edit-form" className="form-app pt-4" onSubmit={handleSubmit(onSubmit)}>
-            <fieldset disabled={isUpdating}>
+            <fieldset disabled={isDisablePage}>
               <Tabs forceRenderTabPanel>
                 <TabList className="px-4 tablist">
                   <Tab><div><BsBox /> <span>Thông tin chung</span></div></Tab>
@@ -353,12 +356,12 @@ const ProductEdit = () => {
                   <Tab><div><TbNotes /> <span>Mô tả</span></div></Tab>
                 </TabList>
 
-                <TabPanel><GeneralTabs /></TabPanel>
-                <TabPanel><AttributeTabs /></TabPanel>
+                <TabPanel><GeneralTabs updating={isDisablePage} /></TabPanel>
+                <TabPanel><AttributeTabs updating={isDisablePage} /></TabPanel>
                 {hasVariants && (
                   <TabPanel><SKUTabs mode="edit" /></TabPanel>
                 )}
-                <TabPanel><DescriptionTabs /></TabPanel>
+                <TabPanel><DescriptionTabs updating={isDisablePage} /></TabPanel>
               </Tabs>
             </fieldset>
           </form>

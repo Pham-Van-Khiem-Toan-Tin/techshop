@@ -1,6 +1,11 @@
 import { AiOutlineLaptop, AiOutlineProduct } from "react-icons/ai";
-import { BsTags } from "react-icons/bs";
+import { BsDisplay, BsMenuButtonFill, BsTags } from "react-icons/bs";
+import { GiWashingMachine, GiWatch } from "react-icons/gi";
+import { GrWifiLow } from "react-icons/gr";
+import { ImPrinter } from "react-icons/im";
+import { LuRefrigerator } from "react-icons/lu";
 import { MdOutlineInventory2 } from "react-icons/md";
+import { PiTelevisionSimple } from "react-icons/pi";
 import {
   RiDashboardLine,
   RiUserLine,
@@ -31,9 +36,12 @@ import {
   RiSmartphoneLine,
   RiAppleLine,
   RiAndroidLine,
+  RiTabletLine,
+  RiHeadphoneLine,
+  RiCamera3Line,
 } from "react-icons/ri";
 import { SiOppo, SiSamsung, SiXiaomi } from "react-icons/si";
-import { TbDevicesPc } from "react-icons/tb";
+import { TbAirConditioning, TbDevicesPc } from "react-icons/tb";
 import { TfiMedall } from "react-icons/tfi";
 export type IconOption = {
   value: string;
@@ -110,5 +118,26 @@ export const optionIcons: IconOption[] = [
   { value: "AiOutlineProduct", label: "Đơn hàng", Icon: AiOutlineProduct },
   { value: "TbDevicesPc", label: "Máy tính để bàn", Icon: TbDevicesPc },
   { value: "MdOutlineInventory2", label: "Tồn kho", Icon: MdOutlineInventory2 },
+  { value: "RiTabletLine", label: "Tablet", Icon: RiTabletLine },
+  { value: "PiTelevisionSimple", label: "Tivi", Icon: PiTelevisionSimple },
+  { value: "GiWashingMachine", label: "Máy giặt", Icon: GiWashingMachine },
+  { value: "LuRefrigerator", label: "Tủ lạnh", Icon: LuRefrigerator },
+  { value: "RiHeadphoneLine", label: "Tai nghe", Icon: RiHeadphoneLine },
+  { value: "TbAirConditioning", label: "Điều hòa", Icon: TbAirConditioning },
+  { value: "BsMenuButtonFill", label: "Link kiện PC", Icon: BsMenuButtonFill },
+  { value: "BsDisplay", label: "Màn hình", Icon: BsDisplay },
+  { value: "GiWatch", label: "Đồng hồ", Icon: GiWatch },
+  { value: "RiCamera3Line", label: "Camera", Icon: RiCamera3Line },
+  { value: "GrWifiLow", label: "Thiết bị mạng", Icon: GrWifiLow },
+  { value: "ImPrinter", label: "TB Văn phòng", Icon: ImPrinter },
 
+
+
+
+
+
+
+
+
+  
 ];

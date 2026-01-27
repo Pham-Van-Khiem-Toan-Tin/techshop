@@ -94,10 +94,12 @@ const InventoryManagement = () => {
         fields: query.field,
         sort: query.sort,
     }, { refetchOnFocus: true, refetchOnReconnect: true })
+    console.log({ data });
+
     const rows: Inventory[] = data?.content ?? [];
     const totalPages = Math.max(
         1,
-        Math.ceil(((data as Page<Inventory>)?.total ?? 0) / size)
+        Math.ceil(((data as Page<Inventory>)?.page?.totalElements ?? 0) / size)
     );
     useEffect(() => {
         if (uiPage > totalPages) setQuery({ page: totalPages });
@@ -192,18 +194,13 @@ const InventoryManagement = () => {
     const onSubmitAdjust = async (values: AdjustForm) => {
         if (!itemSelected?.skuCode) return;
 
-        const qty = parsePositiveInt(values.quantity);
-        if (qty <= 0) {
-            setError("quantity", { type: "validate", message: "Số lượng phải > 0" });
-            return;
-        }
+        // Chuyển đổi chuỗi từ textarea thành mảng serials
+        const serialList = values.serialNumbers
+            ? values.serialNumbers.split('\n').map(s => s.trim()).filter(s => s !== '')
+            : [];
 
-        // EXPORT: không cho xuất quá available
-        if (values.type === "EXPORT" && qty > itemSelected.availableStock) {
-            setError("quantity", {
-                type: "validate",
-                message: `Không thể xuất quá khả dụng (${itemSelected.availableStock})`,
-            });
+        if (values.type === "IMPORT" && serialList.length === 0) {
+            setError("serialNumbers", { type: "required", message: "Vui lòng nhập ít nhất 1 mã Serial" });
             return;
         }
 
@@ -211,14 +208,15 @@ const InventoryManagement = () => {
             await adjustInventory({
                 skuCode: itemSelected.skuCode,
                 type: values.type,
-                quantity: qty,
+                quantity: values.type === "ADJUST" ? Number(values.quantity) : serialList.length,
+                serialNumbers: serialList, // Gửi mảng serials lên backend
                 note: values.note?.trim() || undefined,
             }).unwrap();
-            toast.success("Điều chỉnh tồn kho thành công")
+
+            toast.success("Điều chỉnh kho thành công");
             closeAdjust();
         } catch (e) {
-            // bạn có thể toast ở đây
-            setError("root", { type: "server", message: "Điều chỉnh thất bại. Vui lòng thử lại." });
+            setError("root", { type: "server", message: "Có lỗi xảy ra, vui lòng kiểm tra lại mã Serial." });
         }
     };
     const [itemSelected, setItemSelected] = useState<Inventory | null>(null)
@@ -333,7 +331,7 @@ const InventoryManagement = () => {
                         {
                             key: "view", label: <RiInformationLine />, onClick: (r) => handleOpenModalHistory(r)
                         },
-                        { key: "edit", label: <RiEditLine />, onClick: (r) => openAdjust(r)},
+                        { key: "edit", label: <RiEditLine />, onClick: (r) => openAdjust(r) },
                     ],
                 }}
             />
@@ -345,7 +343,7 @@ const InventoryManagement = () => {
                     totalPages={totalPages}
                     onChange={(nextUiPage) => setQuery({ page: nextUiPage })}
                     variant="basic"
-                    totalElement={data?.total}
+                    totalElement={data?.page?.totalElements}
                     showRowsPerPage
                     rowsPerPage={size}
                     rowsPerPageOptions={[...SIZE_OPTIONS]}
@@ -548,47 +546,51 @@ const InventoryManagement = () => {
                             />
                         </div>
 
-                        {/* Quantity */}
-                        <div className="form-app mb-3">
-                            <label className="form-label mb-1">
-                                {typeWatch === "ADJUST" ? "Tồn kho thực tế (set)" : "Số lượng"}
-                                <span className="text-danger"> *</span>
-                            </label>
-
-                            <input
-                                className={`form-control ${errors.quantity ? "is-invalid" : ""}`}
-                                placeholder={typeWatch === "ADJUST" ? "Nhập tồn thực tế..." : "Nhập số lượng..."}
-                                {...register("quantity", {
-                                    required: "Vui lòng nhập số lượng",
-                                    validate: (v) => parsePositiveInt(v) > 0 || "Số lượng phải > 0",
-                                })}
-                                onChange={(e) => {
-                                    // chỉ cho số
-                                    const clean = e.target.value.replace(/\D+/g, "");
-                                    e.target.value = clean;
-                                }}
-                            />
-
-                            {errors.quantity?.message && <div className="invalid-feedback">{errors.quantity.message}</div>}
-
-                            {/* hint */}
-                            <div className="text-muted mt-1" style={{ fontSize: 12 }}>
-                                {typeWatch === "IMPORT" && "Nhập kho sẽ cộng vào tồn thực."}
-                                {typeWatch === "EXPORT" && "Xuất kho sẽ trừ khỏi tồn thực (không vượt quá khả dụng)."}
-                                {typeWatch === "ADJUST" && "Điều chỉnh sẽ set tồn thực tế theo kiểm kê."}
+                        {typeWatch === "ADJUST" ? (
+                            // Nếu là ADJUST thì vẫn nhập số lượng để set tồn tổng
+                            <div className="form-app mb-3">
+                                <label className="form-label mb-1">Tồn kho thực tế mới <span className="text-danger">*</span></label>
+                                <input className="form-control" type="number" {...register("quantity")} />
                             </div>
-                        </div>
+                        ) : (
+                            // Nếu là IMPORT hoặc EXPORT thì nhập danh sách Serial
+                            <div className="form-app mb-3">
+                                <div className="d-flex justify-content-between align-items-end mb-1">
+                                    <label className="form-label mb-0">
+                                        Danh sách mã Serial (mỗi dòng 1 mã)
+                                        <span className="text-danger"> *</span>
+                                    </label>
+                                    {typeWatch === "IMPORT" && (
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-link p-0 text-decoration-none"
+                                            onClick={() => {
+                                                const fake = Array.from({ length: 5 }, () =>
+                                                    `${itemSelected?.skuCode}-${Math.random().toString(36).substring(7).toUpperCase()}`
+                                                ).join('\n');
+                                                const current = watch("serialNumbers") || "";
+                                                reset({ ...watch(), serialNumbers: current + (current ? '\n' : '') + fake });
+                                            }}
+                                        >
+                                            + Giả lập quét 5 máy
+                                        </button>
+                                    )}
+                                </div>
 
-                        {/* Note */}
-                        <div className="form-app">
-                            <label className="form-label mb-1">Ghi chú</label>
-                            <textarea
-                                className="form-control"
-                                rows={3}
-                                placeholder="Ví dụ: Nhập hàng NCC A / Hàng hỏng / Kiểm kê cuối ngày..."
-                                {...register("note")}
-                            />
-                        </div>
+                                <textarea
+                                    className={`form-control font-monospace ${errors.serialNumbers ? "is-invalid" : ""}`}
+                                    rows={8}
+                                    placeholder="Dán danh sách serial hoặc quét bằng máy quét..."
+                                    {...register("serialNumbers")}
+                                    style={{ fontSize: '13px', lineHeight: '1.5' }}
+                                />
+                                {errors.serialNumbers && <div className="invalid-feedback">{errors.serialNumbers.message}</div>}
+
+                                <div className="mt-2 small text-muted">
+                                    Số lượng ghi nhận: <strong>{watch("serialNumbers")?.split('\n').filter(s => s.trim()).length || 0}</strong> máy
+                                </div>
+                            </div>
+                        )}
                     </Modal.Body>
 
                     <Modal.Footer>

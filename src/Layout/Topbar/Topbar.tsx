@@ -26,15 +26,23 @@ const Topbar = () => {
     const target = useRef(null);
     const dispatch = useAppDispatch();
     const { status, user } = useAppSelector((state) => state.auth)
+    const handleLogout = () => {
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "http://localhost:8088/logout";
+        document.body.appendChild(form);
+        form.submit();
+        dispatch(logout())
+    }
     return (
         <div className="d-flex align-items-center w-100 justify-content-between gap-2 p-3">
             <div>
                 <div className="fw-semibold">{meta.title}</div>
                 <div className="text-muted small">{meta.desc}</div>
             </div>
-            <div className="form-app">
+            {/* <div className="form-app">
                 <input className="form-control form-control-sm" placeholder="Search..." style={{ width: 260 }} />
-            </div>
+            </div> */}
             <div className="d-flex align-items-center gap-4 me-3">
                 {/* <button ref={target} onClick={() => setShow(!show)} className="btn-app btn-app--outline position-relative border-0 p-2">
                     <RiNotification3Fill className="fs-4" />
@@ -71,7 +79,7 @@ const Topbar = () => {
                                         <span>Hồ sơ</span>
                                     </Link></MenuItem>
                                 <MenuItem>
-                                    <div className="d-flex align-items-center gap-2" onClick={() => dispatch(logout())}>
+                                    <div className="d-flex align-items-center gap-2" onClick={handleLogout}>
                                         <RiLogoutBoxLine />
                                         <span>Đăng xuất</span>
                                     </div>

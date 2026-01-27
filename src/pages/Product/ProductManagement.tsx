@@ -80,7 +80,7 @@ const ProductManagement = () => {
   const rows: Product[] = data?.content ?? [];
   const totalPages = Math.max(
     1,
-    Math.ceil(((data as Page<Product>)?.total ?? 0) / size)
+    Math.ceil(((data as Page<Product>)?.page?.totalElements ?? 0) / size)
   );
   useEffect(() => {
     if (uiPage > totalPages) setQuery({ page: totalPages });
@@ -260,7 +260,7 @@ const ProductManagement = () => {
           totalPages={totalPages}
           onChange={(nextUiPage) => setQuery({ page: nextUiPage })}
           variant="basic"
-          totalElement={data?.total}
+          totalElement={data?.page?.totalElements}
           showRowsPerPage
           rowsPerPage={size}
           rowsPerPageOptions={[...SIZE_OPTIONS]}

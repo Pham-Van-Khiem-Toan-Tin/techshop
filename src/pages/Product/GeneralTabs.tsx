@@ -11,13 +11,17 @@ import { useGetBrandOptionQuery } from '../../features/brand/brand.api';
 import type { Option } from '../../types/select.type';
 import { useGetLeafCategoryQuery, useLazyGetCategoryByIdQuery } from '../../features/category/category.api';
 import { toast } from 'react-toastify';
+import { useEffect, useState } from 'react';
+import { slugify } from '../../utils/string';
 
-const GeneralTabs = () => {
-    const { register, control, setValue, formState: { errors }, getValues } = useFormContext<ProductFormUI>();
+const GeneralTabs = ({ updating }: { updating: boolean }) => {
+    const { register, control, watch, setValue, formState: { errors }, getValues } = useFormContext<ProductFormUI>();
     const { data: dataBrand, isLoading: isBrandLoading } = useGetBrandOptionQuery(null);
     const { data: dataCategory, isLoading: isCategoryLoading } = useGetLeafCategoryQuery(null);
     const [getCategoryDetail, { isLoading: isAttributeLoading }] = useLazyGetCategoryByIdQuery();
     const hasVariants = useWatch({ name: "hasVariants", control })
+    const [slugAuto, setSlugAuto] = useState(true);
+
     const category = useWatch({ name: "category", control })
     const onlyNumberNoLeadingZero = (value: string) => {
         // 1. Xóa mọi ký tự không phải số
@@ -28,6 +32,19 @@ const GeneralTabs = () => {
 
         return v;
     };
+    const name = watch("name")
+    const slug = watch("slug")
+    useEffect(() => {
+        if (!slugAuto) return;
+        const next = slugify(name || "")
+        if (next === slug) return;
+
+        setValue("slug", next, {
+            shouldDirty: false,
+            shouldTouch: false,
+            shouldValidate: false, // ⭐ quan trọng
+        });
+    }, [name, slugAuto, slug, setValue])
     const allowOnlyNumberKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         const allowedKeys = [
             "Backspace", "Delete", "Tab", "Enter", "Escape",
@@ -144,6 +161,7 @@ const GeneralTabs = () => {
                                 className="form-control form-control-sm"
                                 placeholder="Ví dụ: iphone-15-promax"
                                 {...register("slug", { required: "Slug không được để trống." })}
+                                onChange={() => setSlugAuto(false)}
                             />
                             {errors.slug && (
                                 <span className="form-message-error">{errors.slug.message}</span>
@@ -169,7 +187,7 @@ const GeneralTabs = () => {
                                         isSearchable
                                         isClearable
                                         isLoading={isBrandLoading}
-                                        isDisabled={isBrandLoading}
+                                        isDisabled={isBrandLoading || updating}
                                         styles={selectStyles}
                                     />
                                 )}
@@ -242,7 +260,7 @@ const GeneralTabs = () => {
                                         }}
                                         isSearchable
                                         isLoading={isCategoryLoading}
-                                        isDisabled={isCategoryLoading || isAttributeLoading}
+                                        isDisabled={isCategoryLoading || isAttributeLoading || updating}
                                         styles={selectStyles}
                                     />
                                 )}

@@ -97,7 +97,7 @@ const AttributeManagement = () => {
 
   const totalPages = Math.max(
     1,
-    Math.ceil(((data as Page<Attribute>)?.total ?? 0) / size)
+    Math.ceil(((data as Page<Attribute>)?.page?.totalElements ?? 0) / size)
   );
   const [changeActive, { isLoading: isLoadingActive }] = useChangeActiveOfAttributeMutation();
   useEffect(() => {
@@ -332,7 +332,7 @@ const AttributeManagement = () => {
           totalPages={totalPages}
           onChange={(nextUiPage) => setQuery({ page: nextUiPage })}
           variant="basic"
-          totalElement={data?.total}
+          totalElement={data?.page?.totalElements}
           showRowsPerPage
           rowsPerPage={size}
           rowsPerPageOptions={[...SIZE_OPTIONS]}

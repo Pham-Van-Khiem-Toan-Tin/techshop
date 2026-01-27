@@ -83,7 +83,7 @@ const FunctionManagement = () => {
   const rows: FunctionData[] = data?.content ?? [];
   const totalPages = Math.max(
     1,
-    Math.ceil(((data as Page<FunctionData>)?.total ?? 0) / size)
+    Math.ceil(((data as Page<FunctionData>)?.totalElements ?? 0) / size)
   );
 
 
@@ -267,7 +267,7 @@ const FunctionManagement = () => {
           totalPages={totalPages}
           onChange={(nextUiPage) => setQuery({ page: nextUiPage })}
           variant="basic"
-          totalElement={data?.total}
+          totalElement={data?.totalElements}
           showRowsPerPage
           rowsPerPage={size}
           rowsPerPageOptions={[...SIZE_OPTIONS]}

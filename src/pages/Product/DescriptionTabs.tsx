@@ -2,7 +2,7 @@ import { Controller, useFormContext } from 'react-hook-form';
 import type { ProductFormUI } from '../../types/product.type';
 import { useRef } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
-const DescriptionTabs = () => {
+const DescriptionTabs = ({updating}: {updating: boolean}) => {
     const { register, control, formState: { errors } } = useFormContext<ProductFormUI>();
     const editorRef = useRef(null);
     return (
@@ -27,6 +27,7 @@ const DescriptionTabs = () => {
                         <>
                             <Editor
                                 id='description'
+                                disabled={updating}
                                 apiKey={import.meta.env.VITE_API_KEY_TINY ?? ""}
                                 value={field.value || ""}
                                 onEditorChange={(content) => field.onChange(content)}

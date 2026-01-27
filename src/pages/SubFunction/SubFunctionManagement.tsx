@@ -91,15 +91,18 @@ export default function SubFunctionManagement() {
         },
         { refetchOnFocus: true, refetchOnReconnect: true }
     );
-
+    console.log(data);
+    
     const rows: SubFunction[] = data?.content ?? [];
     const totalPages = Math.max(
         1,
-        Math.ceil(((data as Page<SubFunction>)?.total ?? 0) / size)
+        Math.ceil(((data as Page<SubFunction>)?.totalElements ?? 0) / size)
     );
 
     // nếu user sửa URL page quá lớn → đẩy về trang cuối
     useEffect(() => {
+        console.log({totalPages});
+        
         if (uiPage > totalPages) setQuery({ page: totalPages });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [totalPages]);
@@ -275,7 +278,7 @@ export default function SubFunctionManagement() {
                     totalPages={totalPages}
                     onChange={(nextUiPage) => setQuery({ page: nextUiPage })}
                     variant="basic"
-                    totalElement={data?.total}
+                    totalElement={data?.totalElements}
                     showRowsPerPage
                     rowsPerPage={size}
                     rowsPerPageOptions={[...SIZE_OPTIONS]}

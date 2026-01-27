@@ -3,7 +3,7 @@ import type { ProductFormUI } from '../../types/product.type';
 import Select from 'react-select';
 import { selectStyles } from '../../features/data/select.data';
 type Opt = { id: string, value: string; label: string };
-const AttributeTabs = () => {
+const AttributeTabs = ({updating}: {updating: boolean}) => {
     const { control, formState: { errors } } = useFormContext<ProductFormUI>();
     const { fields } = useFieldArray({
         name: "attributes",
@@ -15,7 +15,6 @@ const AttributeTabs = () => {
     const sortList = [...(attributesOptions ?? [])].sort(
         (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0)
     );
-    console.log(attributesOptions);
 
     return (
         <div className='px-4'>
@@ -60,6 +59,7 @@ const AttributeTabs = () => {
                                                             placeholder={`Chọn ${opt.label}`}
                                                             isClearable
                                                             isSearchable
+                                                            isDisabled={updating}
                                                             isMulti={true}
                                                             styles={selectStyles}
                                                             onChange={(selected) => {
@@ -74,6 +74,7 @@ const AttributeTabs = () => {
                                                             value={(selectedForSingle) as Opt | null}
                                                             placeholder={`Chọn ${opt.label}`}
                                                             isClearable
+                                                            isDisabled={updating}
                                                             isSearchable
                                                             isMulti={false}
                                                             styles={selectStyles}

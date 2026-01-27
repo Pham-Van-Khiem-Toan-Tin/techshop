@@ -14,25 +14,48 @@ import Select from "react-select";
 
 type Option = { value: string; label: string };
 const ORDER_STATUS_OPTIONS = [
-    { value: "PENDING", label: "PENDING" },
+    { value: "CREATED", label: "CREATED" },
+    { value: "RESERVED", label: "RESERVED" },
+    { value: "AWAITING_PAYMENT", label: "AWAITING_PAYMENT" },
+    { value: "PAID", label: "PAID" },
     { value: "CONFIRMED", label: "CONFIRMED" },
     { value: "SHIPPING", label: "SHIPPING" },
     { value: "DELIVERED", label: "DELIVERED" },
+    { value: "COMPLETED", label: "COMPLETED" },
     { value: "CANCELLED", label: "CANCELLED" },
+    { value: "EXPIRED", label: "EXPIRED" },
+    { value: "RETURNED", label: "RETURNED" },
 ];
 
 const statusBadgeClass = (s?: string) => {
     switch (s) {
-        case "PENDING":
+
+        // 🟡 Chưa hoàn tất / đang chờ
+        case "CREATED":
+        case "RESERVED":
+        case "AWAITING_PAYMENT":
             return "badge text-bg-warning";
+
+        // 🔵 Đã thanh toán / đã xác nhận
+        case "PAID":
         case "CONFIRMED":
             return "badge text-bg-info";
+
+        // 🔷 Đang xử lý
         case "SHIPPING":
             return "badge text-bg-primary";
+
+        // 🟢 Thành công
         case "DELIVERED":
+        case "COMPLETED":
             return "badge text-bg-success";
+
+        // 🔴 Thất bại / kết thúc xấu
         case "CANCELLED":
+        case "EXPIRED":
+        case "RETURNED":
             return "badge text-bg-danger";
+
         default:
             return "badge text-bg-secondary";
     }

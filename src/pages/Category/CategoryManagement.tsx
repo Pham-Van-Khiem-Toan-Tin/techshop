@@ -101,9 +101,10 @@ const CategoryManagement = () => {
     },
     { refetchOnFocus: true, refetchOnReconnect: true }
   );
-
+  console.log({data});
+  
   const rows: Category[] = data?.content ?? [];
-  const totalPages = Math.max(1, Math.ceil(((data as Page<Category>)?.total ?? 0) / size));
+  const totalPages = Math.max(1, Math.ceil(((data as Page<Category>)?.page?.totalElements ?? 0) / size));
 
   // nếu page vượt totalPages -> đưa về trang cuối
   useEffect(() => {
@@ -285,7 +286,7 @@ const CategoryManagement = () => {
         <Pagination
           page={uiPage}
           totalPages={totalPages}
-          totalElement={data?.total}
+          totalElement={data?.page?.totalElements}
           onChange={(nextUiPage) => setQuery({ page: nextUiPage })}
           variant="basic"
           showRowsPerPage
